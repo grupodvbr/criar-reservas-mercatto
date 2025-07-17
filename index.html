@@ -1,262 +1,197 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Reserva de Mesas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Reserva com Comprovante</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #eaeff3;
-      padding: 20px;
-    }
-    .logo {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .logo img {
-      max-height: 80px;
-    }
-    .form-reserva {
-      max-width: 800px;
-      margin: auto;
-      background: #fff;
-      border-radius: 12px;
+      background: #e9f0f7;
       padding: 30px;
-      box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+      margin: 0;
+    }
+    form {
+      background: #ffffff;
+      padding: 35px;
+      border-radius: 14px;
+      max-width: 650px;
+      margin: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
     h2 {
       text-align: center;
-      margin-bottom: 20px;
       color: #333;
+      margin-bottom: 25px;
     }
-    input, select, textarea {
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 18px;
+    }
+    input, select, button {
       width: 100%;
       padding: 12px;
-      margin-top: 10px;
-      margin-bottom: 20px;
+      margin-top: 6px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      box-sizing: border-box;
       font-size: 15px;
+      box-sizing: border-box;
+      transition: 0.3s ease;
     }
-    textarea {
-      resize: vertical;
+    input:focus, select:focus {
+      border-color: #2196F3;
+      outline: none;
+      box-shadow: 0 0 5px rgba(33,150,243,0.3);
     }
-    .mesa-setor, .extra-datas {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      background: #f8f8f8;
-      padding: 15px;
-      border: 1px dashed #ccc;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      position: relative;
+    .datas-container input[type="datetime-local"] {
+      width: calc(100% - 50px);
+      display: inline-block;
     }
-    .mesa-setor label,
-    .extra-datas label {
-      flex: 1 1 200px;
-      display: flex;
-      flex-direction: column;
-      font-size: 14px;
-    }
-    .remove-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: #e74c3c;
-      color: white;
+    .datas-container button.remover-data {
+      width: 35px;
+      height: 35px;
+      background: #f44336;
+      color: #fff;
       border: none;
       border-radius: 50%;
-      width: 25px;
-      height: 25px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .botoes {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 20px;
-    }
-    .btn {
-      background: #2196F3;
-      color: white;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 6px;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    .btn:hover {
-      background: #1976D2;
-    }
-    #status {
-      text-align: center;
-      margin-top: 20px;
       font-weight: bold;
-      color: #2196F3;
-      display: none;
+      cursor: pointer;
+      margin-left: 8px;
+      font-size: 16px;
+    }
+    .datas-container > div {
+      margin-top: 10px;
+    }
+    .add-btn {
+      margin-top: 12px;
+      background: #1976D2;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .add-btn:hover {
+      background: #125ca1;
     }
     .spinner {
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-top: 3px solid #fff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-left: 10px;
+      display: none;
+      margin-top: 14px;
+      text-align: center;
+      font-weight: bold;
+      color: #555;
+      animation: pulse 1s infinite;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .spinner.show {
+      display: block;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    button[type="submit"] {
+      margin-top: 24px;
+      background-color: #2196F3;
+      color: #fff;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    button[type="submit"]:hover {
+      background-color: #1976D2;
     }
   </style>
 </head>
 <body>
+  <form id="reserva-form" enctype="multipart/form-data">
+    <h2>CRIAR RESERVA MERCATTO DELÍCIA</h2>
+    <label>Nome:</label>
+    <input type="text" name="nome" required>
 
-  <div class="logo">
-    <img src="https://static.wixstatic.com/media/d830b0_207a7b09d8f24ebc97b887c3d4d18691~mv2.png" alt="Logo" />
-  </div>
+    <label>Email:</label>
+    <input type="email" name="email" required>
 
-  <h2>Formulário de Reserva</h2>
+    <label>Telefone:</label>
+    <input type="tel" name="telefone" required>
 
-  <div class="form-reserva">
-    <form id="formReserva">
-      <input type="text" name="nome" placeholder="Nome do Cliente" required />
-      <input type="email" name="email" placeholder="E-mail para confirmação" required />
-      <input type="text" name="telefone" placeholder="Telefone / WhatsApp" required />
-      <input type="text" name="valorEstimado" id="valorEstimado" placeholder="Valor Estimado da Reserva (R$)" required />
-      <input type="text" name="pagamentoAntecipado" id="pagamentoAntecipado" placeholder="Pagamento Antecipado (R$)" />
-      <textarea name="cardapio" placeholder="Cardápio / Observações" rows="4"></textarea>
+    <label>Pessoas:</label>
+    <input type="number" name="pessoas" required>
 
-      <select name="banco" required>
-        <option value="">Selecione o Banco de Recebimento</option>
-        <option>Itaú</option>
-        <option>Sicredi</option>
-        <option>Crédito POS</option>
-        <option>Débito POS</option>
-      </select>
+    <label>Mesa:</label>
+    <input type="text" name="mesa">
 
-      <div class="botoes">
-        <button type="button" class="btn" onclick="adicionarBloco()">+ Adicionar Data</button>
-        <button type="submit" class="btn" id="btnReservar">Reservar <span id="spinner" class="spinner" style="display: none;"></span></button>
+    <label>Data(s) e Hora(s) da Reserva:</label>
+    <div class="datas-container" id="datas-container">
+      <div>
+        <input type="datetime-local" name="datahora[]" required>
       </div>
+    </div>
+    <button type="button" class="add-btn" onclick="adicionarData()">+ Adicionar outra data</button>
 
-      <div id="blocos-datas"></div>
-    </form>
+    <label>Valor Estimado (R$):</label>
+    <input type="text" name="valorEstimado">
 
-    <div id="status">⏳ Processando reserva...</div>
-  </div>
+    <label>Pagamento Antecipado (R$):</label>
+    <input type="text" name="pagamentoAntecipado">
+
+    <label>Banco:</label>
+    <select name="banco">
+      <option value="">Selecione o banco</option>
+      <option>Banco do Brasil</option>
+      <option>Caixa Econômica</option>
+      <option>Bradesco</option>
+      <option>Itaú</option>
+      <option>Santander</option>
+      <option>Nubank</option>
+      <option>Inter</option>
+      <option>PicPay</option>
+      <option>Outro</option>
+    </select>
+
+    <label>Comprovante (opcional):</label>
+    <input type="file" name="arquivo" accept=".pdf,.jpg,.jpeg,.png">
+
+    <div class="spinner" id="spinner">⬤ Enviando reserva...</div>
+    <button type="submit" id="btnEnviar">Enviar Reserva</button>
+  </form>
 
   <script>
-    function formatarMoeda(input) {
-      let valor = input.value.replace(/\D/g, '');
-      valor = (parseInt(valor, 10) / 100).toFixed(2);
-      input.value = Number(valor).toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      });
+    const form = document.getElementById('reserva-form');
+    const spinner = document.getElementById('spinner');
+    const btn = document.getElementById('btnEnviar');
+
+    function adicionarData() {
+      const container = document.getElementById('datas-container');
+      const div = document.createElement('div');
+      div.innerHTML = `<input type="datetime-local" name="datahora[]" required>
+                       <button type="button" class="remover-data" onclick="this.parentNode.remove()">x</button>`;
+      container.appendChild(div);
     }
 
-    function desformatarMoeda(valorFormatado) {
-      return valorFormatado.replace(/\D/g, '') / 100;
-    }
-
-    const form = document.getElementById("formReserva");
-    const valorEstimadoInput = document.getElementById("valorEstimado");
-    const pagamentoAntecipadoInput = document.getElementById("pagamentoAntecipado");
-    const statusDiv = document.getElementById("status");
-    const btn = document.getElementById("btnReservar");
-    const spinner = document.getElementById("spinner");
-    const blocosDatas = document.getElementById("blocos-datas");
-
-    valorEstimadoInput.addEventListener("input", () => formatarMoeda(valorEstimadoInput));
-    pagamentoAntecipadoInput.addEventListener("input", () => formatarMoeda(pagamentoAntecipadoInput));
-
-    function adicionarBloco() {
-      const bloco = document.createElement("div");
-      bloco.className = "extra-datas";
-      bloco.innerHTML = `
-        <label>Data e Hora:
-          <input type="datetime-local" name="datas[]" required />
-        </label>
-        <label>Nº de Pessoas:
-          <input type="number" name="pessoas[]" placeholder="Número de Pessoas" required />
-        </label>
-        <label>Setor:
-          <select name="setor[]">
-            <option>Sala VIP</option>
-            <option>Sacada</option>
-            <option>Sala VIP 2</option>
-          </select>
-        </label>
-        <label>Nº da Mesa:
-          <input type="text" name="mesa[]" placeholder="(Opcional)" />
-        </label>
-        <button type="button" class="remove-btn" onclick="removerBloco(this)">&times;</button>
-      `;
-      blocosDatas.appendChild(bloco);
-    }
-
-    function removerBloco(botao) {
-      botao.parentElement.remove();
-    }
-
-    form.addEventListener("submit", async function(event) {
-      event.preventDefault();
-      statusDiv.style.display = "block";
-      spinner.style.display = "inline-block";
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
       btn.disabled = true;
-
+      spinner.classList.add('show');
       const formData = new FormData(form);
-      const dadosGerais = {
-        nome: formData.get("nome"),
-        email: formData.get("email"),
-        telefone: formData.get("telefone"),
-        valorEstimado: desformatarMoeda(formData.get("valorEstimado")) || "",
-        pagamentoAntecipado: desformatarMoeda(formData.get("pagamentoAntecipado") || "0"),
-        banco: formData.get("banco"),
-        cardapio: formData.get("cardapio")
-      };
 
-      const datas = formData.getAll("datas[]");
-      const pessoas = formData.getAll("pessoas[]");
-      const setores = formData.getAll("setor[]");
-      const mesas = formData.getAll("mesa[]");
-
-      for (let i = 0; i < datas.length; i++) {
-        const reserva = {
-          nome: dadosGerais.nome,
-          email: dadosGerais.email,
-          telefone: dadosGerais.telefone,
-          cardapio: dadosGerais.cardapio,
-          banco: dadosGerais.banco,
-          dataHora: datas[i],
-          pessoas: pessoas[i],
-          mesa: setores[i] + (mesas[i] ? ` - ${mesas[i]}` : ""),
-          valorEstimado: i === 0 ? dadosGerais.valorEstimado : "",
-          pagamentoAntecipado: i === 0 ? dadosGerais.pagamentoAntecipado : ""
-        };
-
-        await fetch("https://script.google.com/macros/s/AKfycbxf9BDJWteorRfuzHUjpFkJ36DGZlT2K8tGm3_hbfrZbFHp2oc_Aaqk4FcRdGC7as6p/exec", {
+      try {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbxqXKbxFyRE1SS7yzYrSZ584o30zmthtn5W5m9dMwux3D4rm0hNvcZocuuWKmlzZCV7/exec", {
           method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(reserva)
+          body: formData
         });
+        const text = await response.text();
+        alert(text || "Reserva enviada com sucesso.");
+        form.reset();
+        document.getElementById('datas-container').innerHTML = '<div><input type="datetime-local" name="datahora[]" required></div>';
+      } catch (err) {
+        alert("Erro ao enviar reserva. Verifique sua conexão.");
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        spinner.classList.remove('show');
       }
-
-      statusDiv.textContent = "✅ Reservas registradas com sucesso!";
-      form.reset();
-      blocosDatas.innerHTML = "";
-      btn.disabled = false;
-      spinner.style.display = "none";
-      setTimeout(() => { statusDiv.style.display = "none"; }, 4000);
     });
   </script>
-
 </body>
 </html>
