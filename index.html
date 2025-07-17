@@ -28,7 +28,7 @@
       display: block;
       margin-top: 18px;
     }
-    input, select, button {
+    input, select, textarea, button {
       width: 100%;
       padding: 12px;
       margin-top: 6px;
@@ -38,7 +38,7 @@
       box-sizing: border-box;
       transition: 0.3s ease;
     }
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       border-color: #2196F3;
       outline: none;
       box-shadow: 0 0 5px rgba(33,150,243,0.3);
@@ -105,7 +105,7 @@
 </head>
 <body>
   <form id="reserva-form" enctype="multipart/form-data">
-    <h2>CRIAR RESERVA MERCATTO DELÍCIA</h2>
+    <h2>Formulário de Reserva</h2>
     <label>Nome:</label>
     <input type="text" name="nome" required>
 
@@ -138,16 +138,24 @@
     <label>Banco:</label>
     <select name="banco">
       <option value="">Selecione o banco</option>
-      <option>Banco do Brasil</option>
-      <option>Caixa Econômica</option>
-      <option>Bradesco</option>
-      <option>Itaú</option>
-      <option>Santander</option>
-      <option>Nubank</option>
-      <option>Inter</option>
-      <option>PicPay</option>
+      <option>SICREDI</option>
+      <option>ITAÚ</option>
+      <option>CRÉDITO POS</option>
+      <option>DÉBITO POS</option>
+    </select>
+
+    <label>Cardápio:</label>
+    <select name="cardapio">
+      <option value="">Selecione o cardápio</option>
+      <option>Buffet Básico</option>
+      <option>Buffet Premium</option>
+      <option>Rodízio</option>
+      <option>À la carte</option>
       <option>Outro</option>
     </select>
+
+    <label>Observações:</label>
+    <textarea name="observacoes" rows="3" placeholder="Ex: aniversariante, restrições alimentares, etc..."></textarea>
 
     <label>Comprovante (opcional):</label>
     <input type="file" name="arquivo" accept=".pdf,.jpg,.jpeg,.png">
@@ -176,7 +184,7 @@
       const formData = new FormData(form);
 
       try {
-        const response = await fetch("https://script.google.com/macros/s/AKfycbxqXKbxFyRE1SS7yzYrSZ584o30zmthtn5W5m9dMwux3D4rm0hNvcZocuuWKmlzZCV7/exec", {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbwdofy8hHLIRPJWhlDBBg8UoKabTYphqwr0lP5Yr3h_KmPijDnpThxxi7byJTkfeYO2/exec", {
           method: "POST",
           body: formData
         });
