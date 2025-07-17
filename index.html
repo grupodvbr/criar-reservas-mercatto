@@ -3,23 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <title>Reserva de Mesas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
       padding: 20px;
     }
-
     .logo {
       text-align: center;
       margin-bottom: 15px;
     }
-
     .logo img {
       max-height: 80px;
     }
-
     .form-reserva {
       max-width: 700px;
       margin: auto;
@@ -28,8 +25,7 @@
       padding: 20px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
-
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
@@ -38,11 +34,27 @@
       border: 1px solid #ccc;
       box-sizing: border-box;
     }
-
     input[type="datetime-local"] {
       color: #000;
     }
-
+    .data-range {
+      display: flex;
+      gap: 10px;
+    }
+    .data-range label {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
+    .mesa-setor {
+      display: flex;
+      gap: 10px;
+    }
+    .mesa-setor select,
+    .mesa-setor input {
+      flex: 1;
+    }
     button {
       background: #2196F3;
       color: white;
@@ -51,7 +63,6 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
     #status {
       text-align: center;
       margin-top: 15px;
@@ -75,8 +86,28 @@
       <input type="email" name="email" placeholder="E-mail para confirmação" required />
       <input type="text" name="telefone" placeholder="Telefone / WhatsApp" required />
       <input type="number" name="pessoas" placeholder="Número de Pessoas" required />
-      <input type="text" name="mesa" placeholder="Local da Mesa" />
-      <input type="datetime-local" name="dataHora" required />
+
+      <!-- NOVO BLOCO: SETOR + Nº MESA -->
+      <div class="mesa-setor">
+        <select id="setor" required>
+          <option value="">Selecione o Setor</option>
+          <option>Sala VIP</option>
+          <option>Sacada</option>
+          <option>Sala VIP 2</option>
+        </select>
+        <input type="text" id="mesaInput" placeholder="Nº da Mesa (opcional)" />
+      </div>
+      <input type="hidden" name="mesa" id="campoMesaFinal" />
+
+      <!-- DATA INICIAL E FINAL -->
+      <div class="data-range">
+        <label>De:
+          <input type="datetime-local" name="dataHora" required />
+        </label>
+        <label>Até:
+          <input type="datetime-local" name="dataHoraFim" required />
+        </label>
+      </div>
 
       <input type="text" name="valorEstimado" id="valorEstimado" placeholder="Valor Estimado da Reserva (R$)" required />
       <input type="text" name="pagamentoAntecipado" id="pagamentoAntecipado" placeholder="Pagamento Antecipado (R$)" />
@@ -85,7 +116,11 @@
         <option value="">Selecione o Banco de Recebimento</option>
         <option>Itaú</option>
         <option>Sicredi</option>
+        <option>Crédito POS</option>
+        <option>Débito POS</option>
       </select>
+
+      <textarea name="cardapio" placeholder="Cardápio / Observações" rows="4"></textarea>
 
       <button type="submit" id="btnReservar">Reservar</button>
     </form>
@@ -125,8 +160,14 @@
       dados.valorEstimado = desformatarMoeda(dados.valorEstimado).toFixed(2);
       dados.pagamentoAntecipado = desformatarMoeda(dados.pagamentoAntecipado || "0").toFixed(2);
 
+      // COMBINA SETOR + MESA
+      const setor = document.getElementById("setor").value;
+      const mesa = document.getElementById("mesaInput").value;
+      document.getElementById("campoMesaFinal").value = setor + (mesa ? ` - ${mesa}` : "");
+      dados.mesa = document.getElementById("campoMesaFinal").value;
+
       try {
-        await fetch("https://script.google.com/macros/s/AKfycbzTC8CfbqJ83hFENAblXTDu215vLox78FiZ4YbHGpG4kgzrqofaP3zwaM7YYm0sC4gf/exec", {
+        await fetch("https://script.google.com/macros/s/AKfycbze7Bl0uQ55QEkv8ASopsXVUqQEKjjuQUzi0dUNbPKv85D_t_QUVUGoWBBngSi3TJW5/exec", {
           method: "POST",
           mode: "no-cors",
           headers: { "Content-Type": "application/json" },
