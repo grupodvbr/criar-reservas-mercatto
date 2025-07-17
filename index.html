@@ -6,69 +6,112 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
+      font-family: 'Segoe UI', sans-serif;
+      background: #eaeff3;
       padding: 20px;
     }
     .logo {
       text-align: center;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
     .logo img {
       max-height: 80px;
     }
     .form-reserva {
-      max-width: 700px;
+      max-width: 800px;
       margin: auto;
       background: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
     }
     input, select, textarea {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin-top: 10px;
-      margin-bottom: 15px;
-      border-radius: 5px;
+      margin-bottom: 20px;
+      border-radius: 8px;
       border: 1px solid #ccc;
       box-sizing: border-box;
+      font-size: 15px;
     }
-    input[type="datetime-local"] {
-      color: #000;
+    textarea {
+      resize: vertical;
     }
-    .data-range {
+    .mesa-setor, .extra-datas {
       display: flex;
-      gap: 10px;
+      gap: 15px;
+      flex-wrap: wrap;
+      background: #f8f8f8;
+      padding: 15px;
+      border: 1px dashed #ccc;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      position: relative;
     }
-    .data-range label {
-      flex: 1;
+    .mesa-setor label,
+    .extra-datas label {
+      flex: 1 1 200px;
       display: flex;
       flex-direction: column;
       font-size: 14px;
     }
-    .mesa-setor {
+    .remove-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .botoes {
       display: flex;
-      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
     }
-    .mesa-setor select,
-    .mesa-setor input {
-      flex: 1;
-    }
-    button {
+    .btn {
       background: #2196F3;
       color: white;
-      padding: 10px 15px;
+      padding: 12px 20px;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
+      font-size: 15px;
       cursor: pointer;
+    }
+    .btn:hover {
+      background: #1976D2;
     }
     #status {
       text-align: center;
-      margin-top: 15px;
+      margin-top: 20px;
       font-weight: bold;
       color: #2196F3;
       display: none;
+    }
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -78,39 +121,16 @@
     <img src="https://static.wixstatic.com/media/d830b0_207a7b09d8f24ebc97b887c3d4d18691~mv2.png" alt="Logo" />
   </div>
 
-  <h2 style="text-align:center">Reserva de Mesas</h2>
+  <h2>Formulário de Reserva</h2>
 
   <div class="form-reserva">
     <form id="formReserva">
       <input type="text" name="nome" placeholder="Nome do Cliente" required />
       <input type="email" name="email" placeholder="E-mail para confirmação" required />
       <input type="text" name="telefone" placeholder="Telefone / WhatsApp" required />
-      <input type="number" name="pessoas" placeholder="Número de Pessoas" required />
-
-      <!-- NOVO BLOCO: SETOR + Nº MESA -->
-      <div class="mesa-setor">
-        <select id="setor" required>
-          <option value="">Selecione o Setor</option>
-          <option>Sala VIP</option>
-          <option>Sacada</option>
-          <option>Sala VIP 2</option>
-        </select>
-        <input type="text" id="mesaInput" placeholder="Nº da Mesa (opcional)" />
-      </div>
-      <input type="hidden" name="mesa" id="campoMesaFinal" />
-
-      <!-- DATA INICIAL E FINAL -->
-      <div class="data-range">
-        <label>De:
-          <input type="datetime-local" name="dataHora" required />
-        </label>
-        <label>Até:
-          <input type="datetime-local" name="dataHoraFim" required />
-        </label>
-      </div>
-
       <input type="text" name="valorEstimado" id="valorEstimado" placeholder="Valor Estimado da Reserva (R$)" required />
       <input type="text" name="pagamentoAntecipado" id="pagamentoAntecipado" placeholder="Pagamento Antecipado (R$)" />
+      <textarea name="cardapio" placeholder="Cardápio / Observações" rows="4"></textarea>
 
       <select name="banco" required>
         <option value="">Selecione o Banco de Recebimento</option>
@@ -120,9 +140,12 @@
         <option>Débito POS</option>
       </select>
 
-      <textarea name="cardapio" placeholder="Cardápio / Observações" rows="4"></textarea>
+      <div class="botoes">
+        <button type="button" class="btn" onclick="adicionarBloco()">+ Adicionar Data</button>
+        <button type="submit" class="btn" id="btnReservar">Reservar <span id="spinner" class="spinner" style="display: none;"></span></button>
+      </div>
 
-      <button type="submit" id="btnReservar">Reservar</button>
+      <div id="blocos-datas"></div>
     </form>
 
     <div id="status">⏳ Processando reserva...</div>
@@ -147,41 +170,91 @@
     const pagamentoAntecipadoInput = document.getElementById("pagamentoAntecipado");
     const statusDiv = document.getElementById("status");
     const btn = document.getElementById("btnReservar");
+    const spinner = document.getElementById("spinner");
+    const blocosDatas = document.getElementById("blocos-datas");
 
     valorEstimadoInput.addEventListener("input", () => formatarMoeda(valorEstimadoInput));
     pagamentoAntecipadoInput.addEventListener("input", () => formatarMoeda(pagamentoAntecipadoInput));
 
+    function adicionarBloco() {
+      const bloco = document.createElement("div");
+      bloco.className = "extra-datas";
+      bloco.innerHTML = `
+        <label>Data e Hora:
+          <input type="datetime-local" name="datas[]" required />
+        </label>
+        <label>Nº de Pessoas:
+          <input type="number" name="pessoas[]" placeholder="Número de Pessoas" required />
+        </label>
+        <label>Setor:
+          <select name="setor[]">
+            <option>Sala VIP</option>
+            <option>Sacada</option>
+            <option>Sala VIP 2</option>
+          </select>
+        </label>
+        <label>Nº da Mesa:
+          <input type="text" name="mesa[]" placeholder="(Opcional)" />
+        </label>
+        <button type="button" class="remove-btn" onclick="removerBloco(this)">&times;</button>
+      `;
+      blocosDatas.appendChild(bloco);
+    }
+
+    function removerBloco(botao) {
+      botao.parentElement.remove();
+    }
+
     form.addEventListener("submit", async function(event) {
       event.preventDefault();
       statusDiv.style.display = "block";
+      spinner.style.display = "inline-block";
       btn.disabled = true;
 
-      const dados = Object.fromEntries(new FormData(form).entries());
-      dados.valorEstimado = desformatarMoeda(dados.valorEstimado).toFixed(2);
-      dados.pagamentoAntecipado = desformatarMoeda(dados.pagamentoAntecipado || "0").toFixed(2);
+      const formData = new FormData(form);
+      const dadosGerais = {
+        nome: formData.get("nome"),
+        email: formData.get("email"),
+        telefone: formData.get("telefone"),
+        valorEstimado: desformatarMoeda(formData.get("valorEstimado")) || "",
+        pagamentoAntecipado: desformatarMoeda(formData.get("pagamentoAntecipado") || "0"),
+        banco: formData.get("banco"),
+        cardapio: formData.get("cardapio")
+      };
 
-      // COMBINA SETOR + MESA
-      const setor = document.getElementById("setor").value;
-      const mesa = document.getElementById("mesaInput").value;
-      document.getElementById("campoMesaFinal").value = setor + (mesa ? ` - ${mesa}` : "");
-      dados.mesa = document.getElementById("campoMesaFinal").value;
+      const datas = formData.getAll("datas[]");
+      const pessoas = formData.getAll("pessoas[]");
+      const setores = formData.getAll("setor[]");
+      const mesas = formData.getAll("mesa[]");
 
-      try {
-        await fetch("https://script.google.com/macros/s/AKfycbze7Bl0uQ55QEkv8ASopsXVUqQEKjjuQUzi0dUNbPKv85D_t_QUVUGoWBBngSi3TJW5/exec", {
+      for (let i = 0; i < datas.length; i++) {
+        const reserva = {
+          nome: dadosGerais.nome,
+          email: dadosGerais.email,
+          telefone: dadosGerais.telefone,
+          cardapio: dadosGerais.cardapio,
+          banco: dadosGerais.banco,
+          dataHora: datas[i],
+          pessoas: pessoas[i],
+          mesa: setores[i] + (mesas[i] ? ` - ${mesas[i]}` : ""),
+          valorEstimado: i === 0 ? dadosGerais.valorEstimado : "",
+          pagamentoAntecipado: i === 0 ? dadosGerais.pagamentoAntecipado : ""
+        };
+
+        await fetch("https://script.google.com/macros/s/AKfycbxf9BDJWteorRfuzHUjpFkJ36DGZlT2K8tGm3_hbfrZbFHp2oc_Aaqk4FcRdGC7as6p/exec", {
           method: "POST",
           mode: "no-cors",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dados)
+          body: JSON.stringify(reserva)
         });
-
-        statusDiv.textContent = "✅ Reserva registrada com sucesso!";
-        form.reset();
-      } catch (err) {
-        statusDiv.textContent = "❌ Erro ao registrar reserva.";
-      } finally {
-        btn.disabled = false;
-        setTimeout(() => { statusDiv.style.display = "none"; }, 4000);
       }
+
+      statusDiv.textContent = "✅ Reservas registradas com sucesso!";
+      form.reset();
+      blocosDatas.innerHTML = "";
+      btn.disabled = false;
+      spinner.style.display = "none";
+      setTimeout(() => { statusDiv.style.display = "none"; }, 4000);
     });
   </script>
 
