@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Painel de Nova  Reserva</title>
+  <title>Painel de Nova Reserva</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
     body {
@@ -42,39 +42,6 @@
       box-sizing: border-box;
     }
 
-    .datas-container div {
-      display: flex;
-      align-items: center;
-      margin-top: 10px;
-    }
-
-    .datas-container input {
-      flex: 1;
-    }
-
-    .remover-data {
-      margin-left: 10px;
-      background: #e53935;
-      color: white;
-      font-weight: bold;
-      width: 35px;
-      height: 35px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-    }
-
-    .add-btn {
-      margin-top: 10px;
-      background-color: #1976D2;
-      color: white;
-      font-weight: bold;
-      border: none;
-      padding: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
     button[type="submit"] {
       background-color: #4CAF50;
       margin-top: 20px;
@@ -97,7 +64,7 @@
 <body>
 
   <form id="reservaForm">
-    <h2>📅 RESERVAS MERCATTO </h2>
+    <h2>📅 RESERVAS MERCATTO</h2>
 
     <input type="hidden" name="acao" value="cadastrar">
     <input type="hidden" name="status" value="Pendente">
@@ -122,13 +89,8 @@
       <option>SACADA</option>
     </select>
 
-    <label>Data(s) da Reserva:</label>
-    <div class="datas-container" id="datas-container">
-      <div>
-        <input type="datetime-local" name="datahora[]" required>
-      </div>
-    </div>
-    <button type="button" class="add-btn" onclick="adicionarData()">+ Adicionar Data</button>
+    <label>Data e Hora da Reserva:</label>
+    <input type="datetime-local" name="datahora[]" required>
 
     <label>Valor Estimado (R$):</label>
     <input type="text" name="valorEstimado">
@@ -170,16 +132,6 @@
     const spinner = document.getElementById('spinner');
     const inputArquivo = document.getElementById('arquivo');
 
-    function adicionarData() {
-      const container = document.getElementById('datas-container');
-      const div = document.createElement('div');
-      div.innerHTML = `
-        <input type="datetime-local" name="datahora[]" required>
-        <button type="button" class="remover-data" onclick="this.parentNode.remove()">x</button>
-      `;
-      container.appendChild(div);
-    }
-
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       spinner.classList.add("show");
@@ -199,7 +151,7 @@
       const file = inputArquivo.files[0];
       if (file) {
         const base64 = await toBase64(file);
-        dados["arquivo"] = base64.split(',')[1]; // remove prefixo
+        dados["arquivo"] = base64.split(',')[1];
         dados["nomeArquivo"] = file.name;
       }
 
@@ -211,7 +163,6 @@
         const text = await response.text();
         alert(text || "Reserva enviada com sucesso!");
         form.reset();
-        document.getElementById('datas-container').innerHTML = '<div><input type="datetime-local" name="datahora[]" required></div>';
       } catch (err) {
         alert("Erro ao enviar reserva.");
         console.error(err);
