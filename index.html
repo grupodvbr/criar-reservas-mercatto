@@ -1,66 +1,194 @@
-function doPost(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("Reservas") || ss.insertSheet("Reservas");
-
-  // Cria cabeçalho se necessário
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow([
-      "Data de Envio", "Nome", "Email", "Telefone", "Pessoas", "Mesa",
-      "Data/Hora da Reserva", "Valor Estimado", "Antecipado", "Banco",
-      "Cardápio", "Observações", "Comprovante Base64"
-    ]);
-  }
-
-  const nome = e.parameter.nome || "";
-  const email = e.parameter.email || "";
-  const telefone = e.parameter.telefone || "";
-  const pessoas = e.parameter.pessoas || "";
-  const mesa = e.parameter.mesa || "";
-  const valorEstimado = e.parameter.valorEstimado || "";
-  const pagamentoAntecipado = e.parameter.pagamentoAntecipado || "";
-  const banco = e.parameter.banco || "";
-  const cardapio = e.parameter.cardapio || "";
-  const observacoesOriginais = e.parameter.observacoes || "";
-  const comprovante = e.parameter.arquivo || "";
-
-  // Captura múltiplas datas corretamente
-  let datas = e.parameter["datahora[]"] || e.parameters["datahora[]"];
-  if (!datas) {
-    datas = [];
-  } else if (!Array.isArray(datas)) {
-    datas = [datas];
-  }
-
-  const timestamp = new Date();
-
-  datas.forEach((dataStr, index) => {
-    let dataHora = new Date(dataStr);
-    if (isNaN(dataHora.getTime())) {
-      dataHora = ""; // evita salvar data inválida
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Comandas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      text-align: center;
+      padding: 10px;
     }
 
-    // Se for a primeira linha, mantém todos os valores
-    // Caso contrário, limpa os campos financeiros e marca como "COMPLEMENTO RESERVA"
-    const isPrincipal = index === 0;
+    h1 {
+      font-size: 1.5em;
+      margin-top: 20px;
+    }
 
-    const linha = [
-      timestamp,
-      nome,
-      email,
-      telefone,
-      pessoas,
-      mesa,
-      dataHora,
-      isPrincipal ? valorEstimado : "",
-      isPrincipal ? pagamentoAntecipado : "",
-      isPrincipal ? banco : "",
-      cardapio,
-      isPrincipal ? observacoesOriginais : "COMPLEMENTO RESERVA",
-      isPrincipal ? comprovante : ""
-    ];
+    #reader {
+      width: 100%;
+      max-width: 320px;
+      margin: auto;
+    }
 
-    sheet.appendRow(linha);
-  });
+    #output {
+      margin: 15px 0;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
 
-  return ContentService.createTextOutput("✅ Reserva registrada com sucesso.");
-}
+    button {
+      padding: 12px 20px;
+      margin: 10px 5px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #2196F3;
+    }
+
+    .btn-danger {
+      background-color: #f44336;
+    }
+
+    .btn-warning {
+      background-color: #FF9800;
+    }
+
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 95%;
+      max-width: 600px;
+      background: #fff;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background: #2196F3;
+      color: white;
+    }
+
+    @media (max-width: 500px) {
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>📲 Registro de Comandas</h1>
+
+  <button class="btn-primary" onclick="startScanner()">📷 Iniciar Leitura</button>
+  <button class="btn-warning" onclick="stopScanner()">❌ Fechar Câmera</button>
+
+  <div id="reader"></div>
+  <div id="output">Aguardando leitura...</div>
+
+  <h2>📋 Histórico</h2>
+  <table>
+    <thead>
+      <tr><th>Data</th><th>Comanda</th></tr>
+    </thead>
+    <tbody id="historico"></tbody>
+  </table>
+
+  <button class="btn-danger" onclick="limparHistorico()">🗑️ Limpar Histórico</button>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxeakO64sqrobgBxMnjAmF-CCHf4-4o7k8tL3jWntNtNFXkIdz0gwGzEvSTYMNVoS8h7Q/exec";
+    let scannerInstance;
+    let historicoComandas = new Set();
+
+    function startScanner() {
+      if (scannerInstance) return;
+
+      scannerInstance = new Html5Qrcode("reader");
+      scannerInstance.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        codigo => {
+          const comanda = codigo.trim();
+          if (historicoComandas.has(comanda)) {
+            document.getElementById("output").innerText = `⚠️ Comanda já registrada: ${comanda}`;
+            stopScanner(); // Pausa a leitura após detectar duplicata
+            return;
+          }
+          stopScanner(); // Pausa leitura após escanear uma comanda válida
+          registrarComanda(comanda);
+        },
+        error => {}
+      ).catch(err => {
+        alert("Erro ao acessar câmera: " + err);
+      });
+    }
+
+    function stopScanner() {
+      if (scannerInstance) {
+        scannerInstance.stop().then(() => {
+          scannerInstance.clear();
+          scannerInstance = null;
+          document.getElementById("output").innerText = "📴 Câmera encerrada.";
+        }).catch(err => {
+          alert("Erro ao fechar câmera: " + err);
+        });
+      }
+    }
+
+    function registrarComanda(comanda) {
+      const timestamp = new Date().toISOString();
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comanda, timestamp })
+      }).then(() => {
+        adicionarAoHistorico(timestamp, comanda);
+        document.getElementById("output").innerText = `✅ Comanda registrada: ${comanda}`;
+      }).catch(() => {
+        document.getElementById("output").innerText = `❌ Erro ao registrar: ${comanda}`;
+      });
+    }
+
+    function adicionarAoHistorico(timestamp, comanda) {
+      const dataLocal = new Date(timestamp).toLocaleString('pt-BR');
+      historicoComandas.add(comanda);
+      const linha = `<tr><td>${dataLocal}</td><td>${comanda}</td></tr>`;
+      document.getElementById("historico").insertAdjacentHTML('afterbegin', linha);
+
+      const historico = JSON.parse(localStorage.getItem("comandas") || "[]");
+      historico.unshift({ data: dataLocal, comanda });
+      localStorage.setItem("comandas", JSON.stringify(historico));
+    }
+
+    function carregarHistorico() {
+      const historico = JSON.parse(localStorage.getItem("comandas") || "[]");
+      const tbody = document.getElementById("historico");
+
+      historico.forEach(item => {
+        if (!historicoComandas.has(item.comanda)) {
+          historicoComandas.add(item.comanda);
+          const linha = `<tr><td>${item.data}</td><td>${item.comanda}</td></tr>`;
+          tbody.insertAdjacentHTML('beforeend', linha);
+        }
+      });
+    }
+
+    function limparHistorico() {
+      if (confirm("Tem certeza que deseja apagar o histórico local?")) {
+        localStorage.removeItem("comandas");
+        historicoComandas.clear();
+        document.getElementById("historico").innerHTML = "";
+        document.getElementById("output").innerText = "Histórico limpo.";
+      }
+    }
+
+    window.onload = () => {
+      carregarHistorico();
+    };
+  </script>
+</body>
+</html>
