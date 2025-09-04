@@ -472,6 +472,14 @@
           const res = await fetch(endpoint, { method:'POST', body });
           const txt = await res.text();
           if(!res.ok) return { ok:false, message: txt || 'Falha ao atualizar na planilha.' };
+          // aceita JSON ou texto simples
+          try{
+            const data = JSON.parse(txt);
+            if (typeof data === 'object' && data !== null){
+              if (data.ok === false) return { ok:false, message:data.error || 'Falha ao atualizar.' };
+              return { ok:true, message:data.message || 'Atualizado' };
+            }
+          }catch(_){} // não era JSON
           return { ok:true, message: txt || 'Atualizado' };
         }catch(e){
           return { ok:false, message:`Erro ao atualizar: ${e.message}` };
@@ -526,12 +534,12 @@
 
         const items = state.reservas.filter(r=> r.datahora && ymd(new Date(r.datahora))===ymd(d));
 
-        // ----- Agrupar por setor e colorir VIP vs OUTROS -----
+        // Agrupar por setor e colorir VIP vs OUTROS
         const norm = s => (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
         const groups = new Map();
         for (const r of items) {
-          const label = (r.mesa || '—').trim(); // texto exibido
-          const key   = norm(label);            // chave
+          const label = (r.mesa || '—').trim();
+          const key   = norm(label);
           groups.set(key, { label, count:(groups.get(key)?.count||0)+1 });
         }
         const isVipKey = k => k === 'SALA VIP' || k === 'SALA VIP 2';
@@ -541,7 +549,6 @@
           return `<span class="tag ${css}">${info.count} ${info.label}</span>`;
         }).join('');
 
-        // Pendentes / concluídas
         const pend = items.filter(r=> (r.status||'Pendente')!=='Concluída').length;
         const done = items.filter(r=> r.status==='Concluída').length;
 
@@ -615,7 +622,10 @@
           </div>
           <div class="row" style="margin-left:auto">
             <span class="chip">${status}</span>
-            <button class="btn btn-ghost btn-editar" data-id="${r.id}" style="width:auto">Editar</button>
+            ${r._semIdReal
+              ? `<button class="btn btn-ghost" style="width:auto" disabled title="Sem ID da planilha">Editar</button>`
+              : `<button class="btn btn-ghost btn-editar" data-id="${r.id}" style="width:auto">Editar</button>`
+            }
             <button class="btn btn-danger btn-excluir" data-id="${r.id}" style="width:auto">Excluir</button>
             <button class="btn btn-primary btn-concluir" data-id="${r.id}" style="width:auto">Concluir</button>
           </div>
@@ -629,89 +639,15 @@
       </div>`;
     }
 
-    // ===== Form & validações =====
-    const form = $('#reservaForm');
-    const spinner = $('#spinner');
-    const submitBtn = $('#submitBtn');
-    const cancelEditBtn = $('#cancelEdit');
-    const statusChip = $('#statusChip');
-
-    const inputTelefone = $('#telefone');
-    const inputValor = $('#valorEstimado');
-    const inputSinal = $('#pagamentoAntecipado');
-    const selectBanco = $('#banco');
-    const bancoReq = $('#bancoReq');
-    const inputArquivo = $('#arquivo');
-    const fileBox = $('#fileBox');
-    const fileName = $('#fileName');
-    const clearFile = $('#clearFile');
-    const inputData = $('#datahora');
-
-    inputData.min = nowLocalMin();
-    inputTelefone.addEventListener('input', e => e.target.value = maskPhone(e.target.value));
-    ;[inputValor, inputSinal].forEach(inp => inp.addEventListener('input', e => e.target.value = formatBRLInput(e.target.value)));
-
-    const toggleBancoRequired = () => {
-      const v = parseBRL(inputSinal.value);
-      const has = v > 0; selectBanco.required = has; bancoReq.style.display = has? '' : 'none';
-    };
-    inputSinal.addEventListener('input', toggleBancoRequired);
-
-    inputArquivo.addEventListener('change', () => {
-      const f = inputArquivo.files[0];
-      if(!f){ fileBox.style.display="none"; return; }
-      const okType = /pdf|jpg|jpeg|png/i.test(f.type) || /(pdf|jpg|jpeg|png)$/i.test(f.name);
-      if(!okType){ toast('Tipo de arquivo inválido.'); inputArquivo.value=''; return; }
-      if(f.size > 5*1024*1024){ toast('Arquivo maior que 5 MB.'); inputArquivo.value=''; return; }
-      fileName.textContent = f.name + " • " + (f.size/1024/1024).toFixed(2) + " MB";
-      fileBox.style.display = 'flex';
-    });
-    clearFile.addEventListener('click', ()=>{ inputArquivo.value=''; fileBox.style.display='none'; });
-
-    function validateExtra(){
-      if(new Date(inputData.value) < new Date()){ toast('Data/hora no passado.'); inputData.focus(); return false; }
-      const telDigits = inputTelefone.value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); inputTelefone.focus(); return false; }
-      if(parseBRL(inputSinal.value) > 0 && !selectBanco.value){ toast('Selecione o banco do adiantamento.'); selectBanco.focus(); return false; }
-      return true;
-    }
-
-    form.addEventListener('submit', async (e)=>{
-      e.preventDefault(); if(!form.checkValidity()){ toast('Confira os campos obrigatórios.'); return; } if(!validateExtra()) return;
-      spinner.classList.add('show'); submitBtn.disabled = true;
-
-      const payload = collectPayload();
-      const file = inputArquivo.files[0];
-      if(file){ try{ const b64 = await toBase64(file); payload.arquivo = String(b64).split(',')[1]; payload.nomeArquivo = file.name; }catch(e){ console.error(e); toast('Falha ao ler o arquivo.'); } }
-
-      let resp;
-      if(state.editingId){ resp = await api.atualizar(state.editingId, payload); }
-      else{ resp = await api.cadastrar(payload); }
-
-      if(resp.ok){
-        toast('✅ ' + (resp.message||'OK'));
-        await loadMonth(state.ano, state.mes);
-        form.reset(); statusChip.textContent='Pendente'; inputData.min = nowLocalMin();
-        fileBox.style.display='none'; cancelEditBtn.style.display='none'; state.editingId=null; $('#reservaId').value='';
-      }else{
-        toast('⚠️ ' + resp.message);
-      }
-
-      spinner.classList.remove('show'); submitBtn.disabled = false;
-    });
-
-    function collectPayload(){
-      const fd = new FormData(form);
-      const obj = Object.fromEntries(fd.entries());
-      obj.valorEstimado = String(parseBRL(obj.valorEstimado||0));
-      obj.pagamentoAntecipado = String(parseBRL(obj.pagamentoAntecipado||0));
-      return obj;
-    }
-
     // ===== Ações: Editar / Concluir / Excluir =====
     function onClickEditar(e){
       const id = e.currentTarget.dataset.id;
       const r = state.reservas.find(x=>String(x.id)===String(id));
       if(!r) return;
+      if (r._semIdReal){
+        toast('Não é possível editar: este registro veio sem ID da planilha. Atualize o GAS para o listar retornar ID.');
+        return;
+      }
       openEditModal(r);
     }
 
@@ -913,17 +849,21 @@
     async function loadMonth(ano, mes){
       try{
         const data = await api.listar(ano, mes);
-        state.reservas = data.map((r,i)=> ({
-          id: r.id || r.ID || `ROW-${i+1}`,
-          nome: r.nome||r.Nome||'', email:r.email||r.Email||'', telefone:r.telefone||r.Fone||'', pessoas:r.pessoas||r.Pessoas||'',
-          mesa:r.mesa||r.Local||'', cardapio:r.cardapio||r.Cardapio||'', observacoes:r.observacoes||r.Obs||'',
-          datahora: r.datahora || r.DataHora || r.data || r.Data || '',
-          valorEstimado: String(r.valorEstimado ?? r.ValorEstimado ?? '0'),
-          pagamentoAntecipado: String(r.pagamentoAntecipado ?? r.Adiantamento ?? '0'),
-          valorFinalPago: String(r.valorFinalPago ?? r.FinalPago ?? '0'),
-          banco: r.banco || r.Banco || '', status: r.status || r.Status || 'Pendente',
-          ...r
-        }));
+        state.reservas = data.map((r,i)=> {
+          const idReal = r.id ?? r.ID ?? r.Id ?? r.IdReserva ?? r.IdPlanilha ?? r['Id'] ?? '';
+          return {
+            id: idReal || `ROW-${i+1}`,
+            _semIdReal: !idReal,
+            nome: r.nome||r.Nome||'', email:r.email||r.Email||'', telefone:r.telefone||r.Fone||'', pessoas:r.pessoas||r.Pessoas||'',
+            mesa:r.mesa||r.Mesa||r.Local||'', cardapio:r.cardapio||r.Cardapio||'', observacoes:r.observacoes||r.Obs||'',
+            datahora: r.datahora || r.DataHora || r.data || r.Data || '',
+            valorEstimado: String(r.valorEstimado ?? r.ValorEstimado ?? '0'),
+            pagamentoAntecipado: String(r.pagamentoAntecipado ?? r.Adiantamento ?? '0'),
+            valorFinalPago: String(r.valorFinalPago ?? r.FinalPago ?? '0'),
+            banco: r.banco || r.Banco || '', status: r.status || r.Status || 'Pendente',
+            ...r
+          };
+        });
       }catch(e){
         state.reservas = [];
         toast('⚠️ Erro ao carregar dados da planilha: ' + e.message);
