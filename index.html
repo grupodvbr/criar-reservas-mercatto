@@ -20,6 +20,9 @@
     header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px}
     .title{font-size:clamp(1.1rem,2.2vw,1.6rem); font-weight:800; letter-spacing:.2px; display:flex; align-items:center; gap:10px}
     .badge{font-size:.8rem; background:linear-gradient(90deg,var(--brand),var(--brand-2)); color:#fff; padding:6px 10px; border-radius:999px}
+    .grid{display:grid; gap:16px}
+    .cols{grid-template-columns:1.1fr .9fr}
+    @media (max-width:980px){ .cols{grid-template-columns:1fr} }
     .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 5px 20px rgba(0,0,0,.06)}
     .section{border-top:1px dashed var(--line); padding-top:18px; margin-top:18px}
     .section:first-of-type{border-top:0; padding-top:0; margin-top:0}
@@ -48,39 +51,20 @@
     .toast{position:fixed; inset:auto 16px 16px auto; background:#111827; color:#fff; padding:12px 14px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.3); display:none; z-index:50}
     .toast.show{display:block}
 
-    /* ================= Calendário (MAIOR) ================= */
-    .cal{padding:16px}
-    .cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
-    .cal-title{font-weight:800; font-size:1.15rem}
-    .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:8px}
-    .cal-dow{font-size:.9rem; color:var(--muted); text-align:center; padding:6px 0}
-    .cal-day{
-      background:transparent; border:1px solid var(--line); border-radius:12px;
-      padding:10px; min-height:120px; position:relative; cursor:pointer;
-      transition:.12s transform ease;
-    }
-    .cal-day:hover{transform:translateY(-1px)}
+    /* Calendário */
+    .cal{padding:14px}
+    .cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+    .cal-title{font-weight:800}
+    .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px}
+    .cal-dow{font-size:.8rem; color:var(--muted); text-align:center; padding:4px 0}
+    .cal-day{background:transparent; border:1px solid var(--line); border-radius:10px; padding:8px; min-height:84px; position:relative; cursor:pointer}
     .cal-day.out{opacity:.45}
-    .cal-day .num{font-weight:800; font-size:1.05rem}
-    .cal-day .tags{position:absolute; bottom:10px; left:10px; right:10px; display:flex; gap:6px; flex-wrap:wrap}
-    .tag{font-size:.78rem; padding:4px 8px; border-radius:999px; border:1px solid var(--line)}
+    .cal-day .num{font-weight:700; font-size:.95rem}
+    .cal-day .tags{position:absolute; bottom:8px; left:8px; right:8px; display:flex; gap:6px; flex-wrap:wrap}
+    .tag{font-size:.72rem; padding:2px 6px; border-radius:999px; border:1px solid var(--line)}
     .t-pend{background:#fef3c7; border-color:#fde68a}
     .t-conf{background:#dbeafe; border-color:#bfdbfe}
     .t-done{background:#dcfce7; border-color:#bbf7d0}
-    /* VIP (azul) x OUTROS (laranja) */
-    .t-vip{ background:#dbeafe; border-color:#93c5fd; color:#1e3a8a; }
-    .t-outros{ background:#ffedd5; border-color:#fed7aa; color:#9a3412; }
-
-    /* Resumo */
-    .summary{padding:16px; border-top:1px dashed var(--line)}
-    .summary-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
-    @media (max-width:720px){ .summary-grid{grid-template-columns:1fr} }
-    .kpi{border:1px solid var(--line); border-radius:12px; padding:12px}
-    .kpi .label{font-size:.9rem; color:var(--muted)}
-    .kpi .value{font-size:1.4rem; font-weight:900}
-    .sum-note{font-size:.82rem; color:var(--muted); margin-top:6px}
-
-    footer{padding:14px 20px 20px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
 
     /* Modal base */
     .modal{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:flex-end; z-index:60}
@@ -91,7 +75,18 @@
     .res-item{border:1px solid var(--line); border-radius:12px; padding:10px; margin-bottom:10px}
     .res-item .top{display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap}
     .res-item .name{font-weight:800}
-    .res-item .meta{font-size:.9rem; color:var(--muted)}
+    .res-item .meta{font-size:.86rem; color:var(--muted)}
+
+    /* Resumo */
+    .summary{padding:14px}
+    .summary-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+    @media (max-width:720px){ .summary-grid{grid-template-columns:1fr} }
+    .kpi{border:1px solid var(--line); border-radius:12px; padding:12px}
+    .kpi .label{font-size:.85rem; color:var(--muted)}
+    .kpi .value{font-size:1.3rem; font-weight:900}
+    .sum-note{font-size:.8rem; color:var(--muted); margin-top:6px}
+
+    footer{padding:14px 20px 20px; border-top:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
 
     /* Modal de Concluir (central) */
     #finishModal{align-items:center; justify-content:center}
@@ -112,174 +107,175 @@
   <div class="wrap">
     <header>
       <div class="title">Reservas - Mercatto Delícia</div>
-      <div class="badge">Cadastro • Calendário • Resumo</div>
+      <div class="badge">Calendário & Resumo</div>
     </header>
 
-    <!-- ============ FORMULÁRIO (em cima) ============ -->
-    <form id="reservaForm" class="card" novalidate>
-      <input type="hidden" name="acao" value="cadastrar" />
-      <input type="hidden" name="status" value="Pendente" />
-      <input type="hidden" name="id" id="reservaId" value="" />
+    <div class="grid cols">
+      <!-- COLUNA ESQUERDA: FORMULÁRIO NOVA RESERVA -->
+      <form id="reservaForm" class="card" novalidate>
+        <input type="hidden" name="acao" value="cadastrar" />
+        <input type="hidden" name="status" value="Pendente" />
+        <input type="hidden" name="id" id="reservaId" value="" />
 
-      <div class="section">
-        <h3>👤 Dados do Cliente</h3>
-        <div class="inline-grid">
-          <div>
-            <label for="nome">Nome Completo <span style="color:var(--danger)">*</span></label>
-            <input id="nome" name="nome" type="text" autocomplete="name" required />
-          </div>
-          <div>
-            <label for="email">E-mail <span style="color:var(--danger)">*</span></label>
-            <input id="email" name="email" type="email" autocomplete="email" required />
-          </div>
-          <div>
-            <label for="telefone">Telefone (WhatsApp) <span style="color:var(--danger)">*</span></label>
-            <input id="telefone" name="telefone" type="tel" inputmode="numeric" placeholder="(99) 99999-9999" required />
-            <div class="hint">Usaremos para confirmação da reserva.</div>
-          </div>
-          <div>
-            <label for="pessoas">Quantidade de Pessoas <span style="color:var(--danger)">*</span></label>
-            <input id="pessoas" name="pessoas" type="number" min="1" step="1" required />
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <h3>🪑 Detalhes da Reserva</h3>
-        <div class="inline-grid">
-          <div>
-            <label for="mesa">Local da Reserva <span style="color:var(--danger)">*</span></label>
-            <select id="mesa" name="mesa" required>
-              <option value="">Selecione o local</option>
-              <option>SALA VIP</option>
-              <option>SALA VIP 2</option>
-              <option>SACADA</option>
-              <option>SALÃO CENTRAL</option>
-            </select>
-          </div>
-          <div>
-            <label for="cardapio">Cardápio</label>
-            <select id="cardapio" name="cardapio">
-              <option value="">Selecione</option>
-              <option>Buffet Ouro</option>
-              <option>Buffet Diamante</option>
-              <option>Buffet Master Gold</option>
-              <option>Rodízio Pizza</option>
-              <option>Rodízio Happy Hour</option>
-              <option>À la carte</option>
-              <option>Cardápio Verde</option>
-              <option>Cardápio Azul</option>
-              <option>Cardápio Vermelho</option>
-              <option>Outro</option>
-            </select>
-          </div>
-        </div>
-
-        <label for="datahora">Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
-        <input type="datetime-local" id="datahora" name="datahora" required />
-        <div class="hint">Não é permitido escolher data passada.</div>
-      </div>
-
-      <div class="section">
-        <h3>💳 Pagamento / Sinal</h3>
-        <div class="inline-3">
-          <div>
-            <label for="valorEstimado">Valor Estimado (R$)</label>
-            <input id="valorEstimado" name="valorEstimado" type="text" inputmode="decimal" placeholder="0,00" />
-          </div>
-          <div>
-            <label for="pagamentoAntecipado">Antecipação Inicial (R$)</label>
-            <input id="pagamentoAntecipado" name="pagamentoAntecipado" type="text" inputmode="decimal" placeholder="0,00" />
-          </div>
-          <div>
-            <label for="banco">Banco <span id="bancoReq" style="display:none; color:var(--danger)">*</span></label>
-            <select id="banco" name="banco">
-              <option value="">Selecione</option>
-              <option>SICREDI</option>
-              <option>ITAÚ</option>
-              <option>CRÉDITO POS</option>
-              <option>DÉBITO POS</option>
-            </select>
-            <div class="hint">Obrigatório quando houver pagamento antecipado.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <h3>📝 Observações & Comprovante</h3>
-        <div class="inline-grid">
-          <div>
-            <label for="observacoes">Observações</label>
-            <textarea id="observacoes" name="observacoes" rows="3" placeholder="Preferências, restrições, aniversariante, etc."></textarea>
-          </div>
-          <div>
-            <label for="arquivo">Comprovante (PDF, JPG ou PNG)</label>
-            <input id="arquivo" type="file" accept=".pdf,.jpg,.jpeg,.png" />
-            <div class="file-box" id="fileBox" style="display:none; margin-top:8px">
-              <div class="file-name" id="fileName">—</div>
-              <button type="button" id="clearFile" class="btn btn-danger" style="width:auto">Remover</button>
-            </div>
-            <div class="hint">Tamanho máximo 5 MB.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="row" style="justify-content:space-between">
-          <div class="chip">Status: <strong id="statusChip">CONFIRMADA</strong></div>
-          <div class="chip">Envio seguro</div>
-        </div>
-      </div>
-
-      <footer>
-        <div class="spinner" id="spinner">⬤ Enviando...</div>
-        <div class="toolbar" style="margin-left:auto">
-          <button type="button" id="cancelEdit" class="btn btn-ghost" style="display:none">Cancelar edição</button>
-          <button type="reset" class="btn btn-ghost">Limpar</button>
-          <button type="submit" id="submitBtn" class="btn btn-primary">Salvar Reserva</button>
-        </div>
-      </footer>
-    </form>
-
-    <!-- ============ CALENDÁRIO (maior) + RESUMO (embaixo do formulário) ============ -->
-    <div class="card" style="margin-top:18px">
-      <div class="cal">
-        <div class="cal-head">
-          <div class="toolbar">
-            <button id="prevMonth" class="btn btn-ghost">◀ Mês anterior</button>
-            <button id="todayBtn" class="btn btn-ghost">Hoje</button>
-            <button id="nextMonth" class="btn btn-ghost">Próximo mês ▶</button>
-          </div>
-          <div class="cal-title" id="calTitle">—</div>
-        </div>
-        <div class="cal-grid" id="calDow"></div>
-        <div class="cal-grid" id="calGrid"></div>
-      </div>
-
-      <div class="summary">
-        <h3 style="margin:0 0 6px 0; color:var(--muted)">Resumo do mês</h3>
-        <div class="summary-grid">
-          <div class="kpi">
-            <div class="label">Antecipado (mês)</div>
-            <div class="value" id="kpiAntecipado">R$ 0,00</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Final pago (mês)</div>
-            <div class="value" id="kpiFinalPago">R$ 0,00</div>
-          </div>
-          <div class="kpi">
-            <div class="label">A receber (mês)</div>
-            <div class="value" id="kpiAReceber">R$ 0,00</div>
-            <div class="sum-note">* "A receber" não entra na soma do mês. A soma mensal considera apenas adiantamento + final pago.</div>
-          </div>
-        </div>
-        <div class="section" style="margin-top:12px">
-          <div class="kpi" style="display:flex; align-items:center; justify-content:space-between">
+        <div class="section">
+          <h3>👤 Dados do Cliente</h3>
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px">
             <div>
-              <div class="label">Total do mês (adiantamento + final pago)</div>
-              <div class="value" id="kpiTotalMes">R$ 0,00</div>
+              <label for="nome">Nome Completo <span style="color:var(--danger)">*</span></label>
+              <input id="nome" name="nome" type="text" autocomplete="name" required />
             </div>
-            <button id="refreshBtn" class="btn btn-ghost" style="width:auto">Atualizar</button>
+            <div>
+              <label for="email">E-mail <span style="color:var(--danger)">*</span></label>
+              <input id="email" name="email" type="email" autocomplete="email" required />
+            </div>
+            <div>
+              <label for="telefone">Telefone (WhatsApp) <span style="color:var(--danger)">*</span></label>
+              <input id="telefone" name="telefone" type="tel" inputmode="numeric" placeholder="(99) 99999-9999" required />
+              <div class="hint">Usaremos para confirmação da reserva.</div>
+            </div>
+            <div>
+              <label for="pessoas">Quantidade de Pessoas <span style="color:var(--danger)">*</span></label>
+              <input id="pessoas" name="pessoas" type="number" min="1" step="1" required />
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>🪑 Detalhes da Reserva</h3>
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px">
+            <div>
+              <label for="mesa">Local da Reserva <span style="color:var(--danger)">*</span></label>
+              <select id="mesa" name="mesa" required>
+                <option value="">Selecione o local</option>
+                <option>SALA VIP</option>
+                <option>SALA VIP 2</option>
+                <option>SACADA</option>
+                 <option>SALÃO CENTRAL</option>
+              </select>
+            </div>
+            <div>
+              <label for="cardapio">Cardápio</label>
+              <select id="cardapio" name="cardapio">
+                <option value="">Selecione</option>
+                <option>Buffet Ouro</option>
+                <option>Buffet Diamante</option>
+                <option>Buffet Master Gold</option>
+                <option>Rodízio Pizza</option>
+                <option>Rodízio Happy Hour</option>
+                <option>À la carte</option>
+                                <option>Cardápio Verde</option>
+                                <option>Cardápio Azul</option>
+                                <option>Cardápio Vermelho</option>
+                <option>Outro</option>
+              </select>
+            </div>
+          </div>
+
+          <label for="datahora">Data e Hora da Reserva <span style="color:var(--danger)">*</span></label>
+          <input type="datetime-local" id="datahora" name="datahora" required />
+          <div class="hint">Não é permitido escolher data passada.</div>
+        </div>
+
+        <div class="section">
+          <h3>💳 Pagamento / Sinal</h3>
+          <div class="grid" style="grid-template-columns:1fr 1fr 1fr; gap:12px">
+            <div>
+              <label for="valorEstimado">Valor Estimado (R$)</label>
+              <input id="valorEstimado" name="valorEstimado" type="text" inputmode="decimal" placeholder="0,00" />
+            </div>
+            <div>
+              <label for="pagamentoAntecipado">Antecipação Inicial (R$)</label>
+              <input id="pagamentoAntecipado" name="pagamentoAntecipado" type="text" inputmode="decimal" placeholder="0,00" />
+            </div>
+            <div>
+              <label for="banco">Banco <span id="bancoReq" style="display:none; color:var(--danger)">*</span></label>
+              <select id="banco" name="banco">
+                <option value="">Selecione</option>
+                <option>SICREDI</option>
+                <option>ITAÚ</option>
+                <option>CRÉDITO POS</option>
+                <option>DÉBITO POS</option>
+              </select>
+              <div class="hint">Obrigatório quando houver pagamento antecipado.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>📝 Observações & Comprovante</h3>
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px">
+            <div>
+              <label for="observacoes">Observações</label>
+              <textarea id="observacoes" name="observacoes" rows="3" placeholder="Preferências, restrições, aniversariante, etc."></textarea>
+            </div>
+            <div>
+              <label for="arquivo">Comprovante (PDF, JPG ou PNG)</label>
+              <input id="arquivo" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+              <div class="file-box" id="fileBox" style="display:none; margin-top:8px">
+                <div class="file-name" id="fileName">—</div>
+                <button type="button" id="clearFile" class="btn btn-danger" style="width:auto">Remover</button>
+              </div>
+              <div class="hint">Tamanho máximo 5 MB.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="row" style="justify-content:space-between">
+            <div class="chip">Status: <strong id="statusChip">CONFIRMADA</strong></div>
+            <div class="chip">Envio seguro</div>
+          </div>
+        </div>
+
+        <footer>
+          <div class="spinner" id="spinner">⬤ Enviando...</div>
+          <div class="toolbar" style="margin-left:auto">
+            <button type="button" id="cancelEdit" class="btn btn-ghost" style="display:none">Cancelar edição</button>
+            <button type="reset" class="btn btn-ghost">Limpar</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary">Salvar Reserva</button>
+          </div>
+        </footer>
+      </form>
+
+      <!-- COLUNA DIREITA: CALENDÁRIO + RESUMO -->
+      <div class="card">
+        <div class="cal">
+          <div class="cal-head">
+            <div class="toolbar">
+              <button id="prevMonth" class="btn btn-ghost">◀ Mês anterior</button>
+              <button id="todayBtn" class="btn btn-ghost">Hoje</button>
+              <button id="nextMonth" class="btn btn-ghost">Próximo mês ▶</button>
+            </div>
+            <div class="cal-title" id="calTitle">—</div>
+          </div>
+          <div class="cal-grid" id="calDow"></div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div class="summary">
+          <h3 style="margin:0 0 6px 0; color:var(--muted)">Resumo do mês</h3>
+          <div class="summary-grid">
+            <div class="kpi">
+              <div class="label">Antecipado (mês)</div>
+              <div class="value" id="kpiAntecipado">R$ 0,00</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Final pago (mês)</div>
+              <div class="value" id="kpiFinalPago">R$ 0,00</div>
+            </div>
+            <div class="kpi">
+              <div class="label">A receber (mês)</div>
+              <div class="value" id="kpiAReceber">R$ 0,00</div>
+              <div class="sum-note">* "A receber" não entra na soma do mês. A soma mensal considera apenas adiantamento + final pago.</div>
+            </div>
+          </div>
+          <div class="section" style="margin-top:12px">
+            <div class="kpi" style="display:flex; align-items:center; justify-content:space-between">
+              <div>
+                <div class="label">Total do mês (adiantamento + final pago)</div>
+                <div class="value" id="kpiTotalMes">R$ 0,00</div>
+              </div>
+              <button id="refreshBtn" class="btn btn-ghost" style="width:auto">Atualizar</button>
+            </div>
           </div>
         </div>
       </div>
@@ -310,19 +306,33 @@
     </div>
   </div>
 
-  <!-- Modal de Edição -->
+  <!-- Modal de Edição (NOVO) -->
   <div class="modal" id="editModal" aria-hidden="true">
     <div class="sheet">
       <h3 style="margin-bottom:0">✏️ Editar reserva / adicionar pagamentos & anexos</h3>
       <div style="padding:0 16px 16px">
         <input type="hidden" id="editId" />
+
+        <!-- Bloco base -->
         <div class="section">
           <h3>👤 Cliente</h3>
           <div class="inline-grid">
-            <div><label>Nome</label><input id="e_nome" /></div>
-            <div><label>E-mail</label><input id="e_email" type="email" /></div>
-            <div><label>Telefone</label><input id="e_telefone" /></div>
-            <div><label>Pessoas</label><input id="e_pessoas" type="number" min="1" /></div>
+            <div>
+              <label>Nome</label>
+              <input id="e_nome" />
+            </div>
+            <div>
+              <label>E-mail</label>
+              <input id="e_email" type="email" />
+            </div>
+            <div>
+              <label>Telefone</label>
+              <input id="e_telefone" />
+            </div>
+            <div>
+              <label>Pessoas</label>
+              <input id="e_pessoas" type="number" min="1" />
+            </div>
           </div>
         </div>
 
@@ -336,7 +346,6 @@
                 <option>SALA VIP</option>
                 <option>SALA VIP 2</option>
                 <option>SACADA</option>
-                <option>SALÃO CENTRAL</option>
               </select>
             </div>
             <div>
@@ -358,8 +367,14 @@
         <div class="section">
           <h3>💳 Pagamentos</h3>
           <div class="inline-3">
-            <div><label>Estimado (R$)</label><input id="e_valorEstimado" inputmode="decimal" placeholder="0,00" /></div>
-            <div><label>Adiantado (base) (R$)</label><input id="e_pagamentoAntecipado" inputmode="decimal" placeholder="0,00" /></div>
+            <div>
+              <label>Estimado (R$)</label>
+              <input id="e_valorEstimado" inputmode="decimal" placeholder="0,00" />
+            </div>
+            <div>
+              <label>Adiantado (base) (R$)</label>
+              <input id="e_pagamentoAntecipado" inputmode="decimal" placeholder="0,00" />
+            </div>
             <div>
               <label>Banco do adiantamento</label>
               <select id="e_banco">
@@ -377,6 +392,7 @@
           <div class="toolbar" style="justify-content:flex-end; margin-top:8px">
             <button id="addExtraBtn" type="button" class="btn btn-ghost" style="width:auto">+ Adicionar pagamento extra</button>
           </div>
+
           <div class="chip" id="sumPreview" style="margin-top:8px">Total adiantado (base + extras): <b>R$ 0,00</b></div>
         </div>
 
@@ -418,6 +434,7 @@
     const parseBRL = v => { if(!v) return 0; const s=v.toString().replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',', '.'); const n=Number(s); return isNaN(n)?0:n; };
     const nowLocalMin = ()=>{ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
     const ymd = d=>{ const z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`; };
+
     const toBase64 = (file) => new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(file); });
 
     // ===== Estado =====
@@ -482,7 +499,7 @@
     const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const dow = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
     const calTitle = $('#calTitle'), calDow = $('#calDow'), calGrid = $('#calGrid');
-    calDow.innerHTML = dow.map(d=>`<div class="cal-dow">${d}</div>').join('');
+    calDow.innerHTML = dow.map(d=>`<div class="cal-dow">${d}</div>`).join('');
 
     function buildCalendar(){
       const {mes, ano} = state;
@@ -492,7 +509,6 @@
       const start = new Date(first);
       const startDay = (first.getDay()+7)%7;
       start.setDate(1 - startDay);
-
       for(let i=0;i<42;i++){
         const d = new Date(start); d.setDate(start.getDate()+i);
         const inMonth = d.getMonth()===mes;
@@ -500,24 +516,14 @@
         cell.type='button';
         cell.className = 'cal-day' + (inMonth? '':' out');
         cell.dataset.date = ymd(d);
-
         const items = state.reservas.filter(r=> r.datahora && ymd(new Date(r.datahora))===ymd(d));
-        const isVip = r => (r.mesa||'').toUpperCase()==='SALA VIP' || (r.mesa||'').toUpperCase()==='SALA VIP 2';
-        const vipCount = items.filter(isVip).length;
-        const outrosCount = items.length - vipCount;
-
         const pend = items.filter(r=> (r.status||'Pendente')!=='Concluída').length;
         const done = items.filter(r=> r.status==='Concluída').length;
-
-        cell.innerHTML = `
-          <div class="num">${d.getDate()}</div>
-          <div class="tags">
-            ${vipCount ? `<span class="tag t-vip">${vipCount} VIP</span>` : ''}
-            ${outrosCount ? `<span class="tag t-outros">${outrosCount} outros</span>` : ''}
-            ${pend ? `<span class="tag t-pend">Pend: ${pend}</span>` : ''}
-            ${done ? `<span class="tag t-done">Conc: ${done}</span>` : ''}
-          </div>
-        `;
+        cell.innerHTML = `<div class="num">${d.getDate()}</div>
+          <div class="tags">${items.length? `<span class="tag t-conf">${items.length} reserva(s)</span>`:''}
+            ${pend? `<span class="tag t-pend">Pend: ${pend}</span>`:''}
+            ${done? `<span class="tag t-done">Conc: ${done}</span>`:''}
+          </div>`;
         cell.addEventListener('click', ()=> openDayModal(d, items));
         calGrid.appendChild(cell);
       }
@@ -566,9 +572,11 @@
       const hora = new Date(r.datahora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
       const status = r.status||'Pendente';
 
+      // anexos em colunas diferentes
       const anexoKeys = Object.keys(r).filter(k => k.toLowerCase().includes("anexo") && r[k]);
       const anexos = anexoKeys.map((k,i) => `<a href="${r[k]}" target="_blank">📎 Anexo ${i+1}</a>`).join("<br>");
 
+      // pagamentos adicionais (qualquer campo que contenha "pagamento" e não seja os 3 principais)
       const pagamentoKeys = Object.keys(r).filter(k=> /pagamento/i.test(k) && !['pagamentoAntecipado','valorFinalPago','valorEstimado'].includes(k));
       const pagamentos = pagamentoKeys.map((k,i)=> `💵 Pagamento ${i+1}: ${formatBRL(parseBRL(r[k]))}`).join('<br>');
 
@@ -594,7 +602,7 @@
       </div>`;
     }
 
-    // ===== Form & validações =====
+    // ===== Form & validações (NOVO + existente) =====
     const form = $('#reservaForm');
     const spinner = $('#spinner');
     const submitBtn = $('#submitBtn');
@@ -796,12 +804,14 @@
       $('#e_banco').value = r.banco||'';
       $('#e_observacoes').value = r.observacoes||'';
 
+      // montar extras existentes (se vierem da planilha como pagamentoExtraN)
       extrasList.innerHTML = '';
       const keys = Object.keys(r).filter(k=>k.toLowerCase().startsWith('pagamentoextra'));
       keys.sort();
       keys.forEach(k=> addExtraRow(parseBRL(r[k]), r['banco' + k.replace('pagamento','')] || ''));
       updateSumPreview();
 
+      // limpar lista de anexos
       anexosList.innerHTML = '';
     }
 
@@ -822,10 +832,12 @@
       const id = $('#editId').value;
       if(!id) return;
 
+      // validações rápidas
       if(!$('#e_nome').value){ toast('Informe o nome.'); return; }
       if($('#e_datahora').value && new Date($('#e_datahora').value) < new Date()){ toast('Data/hora no passado.'); return; }
       const telDigits = $('#e_telefone').value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); return; }
 
+      // montar payload
       const payload = {
         nome: $('#e_nome').value,
         email: $('#e_email').value,
@@ -839,6 +851,7 @@
         observacoes: $('#e_observacoes').value
       };
 
+      // extras -> somar ao adiantamento base e enviar campos individuais também
       const base = parseBRL($('#e_pagamentoAntecipado').value||0);
       let totalExtras = 0; let i=0; const extras = $$('.item-row-3', extrasList);
       for(const row of extras){
@@ -848,6 +861,7 @@
       }
       payload.pagamentoAntecipado = String(base + totalExtras);
 
+      // anexos adicionais -> enviar como anexoN (base64) + anexoNomeN
       let ai = 0; const rows = $$('.anexo-file');
       for(const fInput of rows){
         const f = fInput.files && fInput.files[0];
@@ -887,6 +901,7 @@
           pagamentoAntecipado: String(r.pagamentoAntecipado ?? r.Adiantamento ?? '0'),
           valorFinalPago: String(r.valorFinalPago ?? r.FinalPago ?? '0'),
           banco: r.banco || r.Banco || '', status: r.status || r.Status || 'Pendente',
+          // incluir quaisquer campos extras/anexos devolvidos pela planilha
           ...r
         }));
       }catch(e){
