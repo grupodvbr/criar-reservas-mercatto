@@ -51,7 +51,7 @@
     .toast{position:fixed; inset:auto 16px 16px auto; background:#111827; color:#fff; padding:12px 14px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.3); display:none; z-index:50}
     .toast.show{display:block}
 
-    /* Calendário */
+    /* Calendário (tamanho original) */
     .cal{padding:14px}
     .cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
     .cal-title{font-weight:800}
@@ -63,8 +63,10 @@
     .cal-day .tags{position:absolute; bottom:8px; left:8px; right:8px; display:flex; gap:6px; flex-wrap:wrap}
     .tag{font-size:.72rem; padding:2px 6px; border-radius:999px; border:1px solid var(--line)}
     .t-pend{background:#fef3c7; border-color:#fde68a}
-    .t-conf{background:#dbeafe; border-color:#bfdbfe}
     .t-done{background:#dcfce7; border-color:#bbf7d0}
+    /* NOVO: cores por tipo de local */
+    .t-vip{ background:#dbeafe; border-color:#93c5fd; color:#1e3a8a; }     /* azul p/ SALA VIP e SALA VIP 2 */
+    .t-outros{ background:#ffedd5; border-color:#fed7aa; color:#9a3412; } /* laranja p/ demais */
 
     /* Modal base */
     .modal{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:flex-end; z-index:60}
@@ -111,7 +113,7 @@
     </header>
 
     <div class="grid cols">
-      <!-- COLUNA ESQUERDA: FORMULÁRIO NOVA RESERVA -->
+      <!-- COLUNA ESQUERDA: FORMULÁRIO (inalterado) -->
       <form id="reservaForm" class="card" novalidate>
         <input type="hidden" name="acao" value="cadastrar" />
         <input type="hidden" name="status" value="Pendente" />
@@ -150,7 +152,7 @@
                 <option>SALA VIP</option>
                 <option>SALA VIP 2</option>
                 <option>SACADA</option>
-                 <option>SALÃO CENTRAL</option>
+                <option>SALÃO CENTRAL</option>
               </select>
             </div>
             <div>
@@ -163,9 +165,9 @@
                 <option>Rodízio Pizza</option>
                 <option>Rodízio Happy Hour</option>
                 <option>À la carte</option>
-                                <option>Cardápio Verde</option>
-                                <option>Cardápio Azul</option>
-                                <option>Cardápio Vermelho</option>
+                <option>Cardápio Verde</option>
+                <option>Cardápio Azul</option>
+                <option>Cardápio Vermelho</option>
                 <option>Outro</option>
               </select>
             </div>
@@ -237,7 +239,7 @@
         </footer>
       </form>
 
-      <!-- COLUNA DIREITA: CALENDÁRIO + RESUMO -->
+      <!-- COLUNA DIREITA: CALENDÁRIO + RESUMO (inalterados, só as tags novas) -->
       <div class="card">
         <div class="cal">
           <div class="cal-head">
@@ -306,14 +308,13 @@
     </div>
   </div>
 
-  <!-- Modal de Edição (NOVO) -->
+  <!-- Modal de Edição (full sheet) -->
   <div class="modal" id="editModal" aria-hidden="true">
     <div class="sheet">
       <h3 style="margin-bottom:0">✏️ Editar reserva / adicionar pagamentos & anexos</h3>
       <div style="padding:0 16px 16px">
         <input type="hidden" id="editId" />
 
-        <!-- Bloco base -->
         <div class="section">
           <h3>👤 Cliente</h3>
           <div class="inline-grid">
@@ -346,6 +347,7 @@
                 <option>SALA VIP</option>
                 <option>SALA VIP 2</option>
                 <option>SACADA</option>
+                <option>SALÃO CENTRAL</option>
               </select>
             </div>
             <div>
@@ -392,7 +394,6 @@
           <div class="toolbar" style="justify-content:flex-end; margin-top:8px">
             <button id="addExtraBtn" type="button" class="btn btn-ghost" style="width:auto">+ Adicionar pagamento extra</button>
           </div>
-
           <div class="chip" id="sumPreview" style="margin-top:8px">Total adiantado (base + extras): <b>R$ 0,00</b></div>
         </div>
 
@@ -434,13 +435,12 @@
     const parseBRL = v => { if(!v) return 0; const s=v.toString().replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',', '.'); const n=Number(s); return isNaN(n)?0:n; };
     const nowLocalMin = ()=>{ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
     const ymd = d=>{ const z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`; };
-
     const toBase64 = (file) => new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(file); });
 
     // ===== Estado =====
     const state = { mes:(new Date()).getMonth(), ano:(new Date()).getFullYear(), reservas:[], editingId:null };
 
-    // ===== API (SEM localStorage) =====
+    // ===== API =====
     const api = {
       async listar(ano, mes){
         const url = `${endpoint}?acao=listar&ano=${ano}&mes=${mes+1}`;
@@ -509,6 +509,7 @@
       const start = new Date(first);
       const startDay = (first.getDay()+7)%7;
       start.setDate(1 - startDay);
+
       for(let i=0;i<42;i++){
         const d = new Date(start); d.setDate(start.getDate()+i);
         const inMonth = d.getMonth()===mes;
@@ -516,11 +517,21 @@
         cell.type='button';
         cell.className = 'cal-day' + (inMonth? '':' out');
         cell.dataset.date = ymd(d);
+
         const items = state.reservas.filter(r=> r.datahora && ymd(new Date(r.datahora))===ymd(d));
+
+        // NOVO: contagem por tipo de local
+        const isVip = r => (r.mesa||'').toUpperCase()==='SALA VIP' || (r.mesa||'').toUpperCase()==='SALA VIP 2';
+        const vipCount = items.filter(isVip).length;
+        const outrosCount = items.length - vipCount;
+
         const pend = items.filter(r=> (r.status||'Pendente')!=='Concluída').length;
         const done = items.filter(r=> r.status==='Concluída').length;
+
         cell.innerHTML = `<div class="num">${d.getDate()}</div>
-          <div class="tags">${items.length? `<span class="tag t-conf">${items.length} reserva(s)</span>`:''}
+          <div class="tags">
+            ${vipCount ? `<span class="tag t-vip">${vipCount} VIP</span>` : ''}
+            ${outrosCount ? `<span class="tag t-outros">${outrosCount} outros</span>` : ''}
             ${pend? `<span class="tag t-pend">Pend: ${pend}</span>`:''}
             ${done? `<span class="tag t-done">Conc: ${done}</span>`:''}
           </div>`;
@@ -572,11 +583,9 @@
       const hora = new Date(r.datahora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
       const status = r.status||'Pendente';
 
-      // anexos em colunas diferentes
       const anexoKeys = Object.keys(r).filter(k => k.toLowerCase().includes("anexo") && r[k]);
       const anexos = anexoKeys.map((k,i) => `<a href="${r[k]}" target="_blank">📎 Anexo ${i+1}</a>`).join("<br>");
 
-      // pagamentos adicionais (qualquer campo que contenha "pagamento" e não seja os 3 principais)
       const pagamentoKeys = Object.keys(r).filter(k=> /pagamento/i.test(k) && !['pagamentoAntecipado','valorFinalPago','valorEstimado'].includes(k));
       const pagamentos = pagamentoKeys.map((k,i)=> `💵 Pagamento ${i+1}: ${formatBRL(parseBRL(r[k]))}`).join('<br>');
 
@@ -602,7 +611,7 @@
       </div>`;
     }
 
-    // ===== Form & validações (NOVO + existente) =====
+    // ===== Form & validações (como antes) =====
     const form = $('#reservaForm');
     const spinner = $('#spinner');
     const submitBtn = $('#submitBtn');
@@ -804,14 +813,12 @@
       $('#e_banco').value = r.banco||'';
       $('#e_observacoes').value = r.observacoes||'';
 
-      // montar extras existentes (se vierem da planilha como pagamentoExtraN)
       extrasList.innerHTML = '';
       const keys = Object.keys(r).filter(k=>k.toLowerCase().startsWith('pagamentoextra'));
       keys.sort();
       keys.forEach(k=> addExtraRow(parseBRL(r[k]), r['banco' + k.replace('pagamento','')] || ''));
       updateSumPreview();
 
-      // limpar lista de anexos
       anexosList.innerHTML = '';
     }
 
@@ -832,12 +839,10 @@
       const id = $('#editId').value;
       if(!id) return;
 
-      // validações rápidas
       if(!$('#e_nome').value){ toast('Informe o nome.'); return; }
       if($('#e_datahora').value && new Date($('#e_datahora').value) < new Date()){ toast('Data/hora no passado.'); return; }
       const telDigits = $('#e_telefone').value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); return; }
 
-      // montar payload
       const payload = {
         nome: $('#e_nome').value,
         email: $('#e_email').value,
@@ -851,7 +856,6 @@
         observacoes: $('#e_observacoes').value
       };
 
-      // extras -> somar ao adiantamento base e enviar campos individuais também
       const base = parseBRL($('#e_pagamentoAntecipado').value||0);
       let totalExtras = 0; let i=0; const extras = $$('.item-row-3', extrasList);
       for(const row of extras){
@@ -861,7 +865,6 @@
       }
       payload.pagamentoAntecipado = String(base + totalExtras);
 
-      // anexos adicionais -> enviar como anexoN (base64) + anexoNomeN
       let ai = 0; const rows = $$('.anexo-file');
       for(const fInput of rows){
         const f = fInput.files && fInput.files[0];
@@ -901,7 +904,6 @@
           pagamentoAntecipado: String(r.pagamentoAntecipado ?? r.Adiantamento ?? '0'),
           valorFinalPago: String(r.valorFinalPago ?? r.FinalPago ?? '0'),
           banco: r.banco || r.Banco || '', status: r.status || r.Status || 'Pendente',
-          // incluir quaisquer campos extras/anexos devolvidos pela planilha
           ...r
         }));
       }catch(e){
