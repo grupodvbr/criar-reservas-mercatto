@@ -122,7 +122,7 @@
     #finishModal{align-items:center; justify-content:center}
     #finishModal .sheet{max-width:520px; border-radius:16px; overflow:hidden}
 
-    /* Modal de Edição (full sheet) */
+    /* Modal de Edição (full sheet) — opcional (não usamos para editar os dados base) */
     #editModal .sheet{border-radius:18px 18px 0 0}
     .inline-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
     .inline-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
@@ -334,6 +334,7 @@
     </div>
   </div>
 
+  <!-- Modal de Edição (opcional — mantido caso queira usar depois) -->
   <div class="modal" id="editModal" aria-hidden="true">
     <div class="sheet">
       <h3 style="margin-bottom:0">✏️ Editar reserva / adicionar pagamentos & anexos</h3>
@@ -348,7 +349,6 @@
             <div><label>Pessoas</label><input id="e_pessoas" type="number" min="1" /></div>
           </div>
         </div>
-
         <div class="section">
           <h3>🪑 Reserva</h3>
           <div class="inline-grid">
@@ -377,7 +377,6 @@
           <label>Data e Hora</label>
           <input id="e_datahora" type="datetime-local" />
         </div>
-
         <div class="section">
           <h3>💳 Pagamentos</h3>
           <div class="inline-3">
@@ -394,7 +393,6 @@
               </select>
             </div>
           </div>
-
           <div style="margin-top:10px" class="hint">Use a lista abaixo para adicionar pagamentos extras.</div>
           <div id="extrasList" class="list-bordered" aria-live="polite"></div>
           <div class="toolbar" style="justify-content:flex-end; margin-top:8px">
@@ -402,7 +400,6 @@
           </div>
           <div class="chip" id="sumPreview" style="margin-top:8px">Total adiantado (base + extras): <b>R$ 0,00</b></div>
         </div>
-
         <div class="section">
           <h3>📎 Anexos adicionais</h3>
           <div id="anexosList" class="list-bordered"></div>
@@ -411,12 +408,10 @@
           </div>
           <div class="hint">Tipos aceitos: PDF, JPG, PNG. Máx 5 MB por arquivo.</div>
         </div>
-
         <div class="section">
           <h3>📝 Observações</h3>
           <textarea id="e_observacoes" rows="3" placeholder="Observações gerais..."></textarea>
         </div>
-
         <div class="toolbar" style="justify-content:flex-end">
           <button type="button" id="cancelEditModal" class="btn btn-ghost" style="width:auto">Cancelar</button>
           <button type="button" id="saveEditBtn" class="btn btn-primary" style="width:auto">Salvar alterações</button>
@@ -428,10 +423,14 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // ===== Config =====
+    /* ==============================
+       Config
+    ============================== */
     const endpoint = "https://script.google.com/macros/s/AKfycbwE-0oOl4wGHz7gFXHIgYHNihCTW4-uzUjGv_iLvPSWX1sma8pi9eJIwx1K4grFOILj/exec";
 
-    // ===== Helpers =====
+    /* ==============================
+       Helpers
+    ============================== */
     const $ = (s,el=document)=>el.querySelector(s);
     const $$ = (s,el=document)=>Array.from(el.querySelectorAll(s));
     const toast = (msg, ms=3500) => { const el = $("#toast"); el.textContent = msg; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"), ms); };
@@ -443,10 +442,14 @@
     const ymd = d=>{ const z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`; };
     const toBase64 = (file) => new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(file); });
 
-    // ===== Estado =====
+    /* ==============================
+       Estado
+    ============================== */
     const state = { mes:(new Date()).getMonth(), ano:(new Date()).getFullYear(), reservas:[], editingId:null };
 
-    // ===== API =====
+    /* ==============================
+       API
+    ============================== */
     const api = {
       async listar(ano, mes){
         const url = `${endpoint}?acao=listar&ano=${ano}&mes=${mes+1}`;
@@ -472,14 +475,11 @@
           const res = await fetch(endpoint, { method:'POST', body });
           const txt = await res.text();
           if(!res.ok) return { ok:false, message: txt || 'Falha ao atualizar na planilha.' };
-          // aceita JSON ou texto simples
           try{
-            const data = JSON.parse(txt);
-            if (typeof data === 'object' && data !== null){
-              if (data.ok === false) return { ok:false, message:data.error || 'Falha ao atualizar.' };
-              return { ok:true, message:data.message || 'Atualizado' };
-            }
-          }catch(_){} // não era JSON
+            const json = JSON.parse(txt);
+            if (json.ok === false) return { ok:false, message: json.error || 'Falha ao atualizar.' };
+            return { ok:true, message: json.message || 'Atualizado' };
+          }catch{ /* resposta texto simples */ }
           return { ok:true, message: txt || 'Atualizado' };
         }catch(e){
           return { ok:false, message:`Erro ao atualizar: ${e.message}` };
@@ -500,7 +500,7 @@
         try{
           const body = new URLSearchParams({ acao:'excluir', id });
           const res = await fetch(endpoint, { method:'POST', body });
-          const txt = await res.text();
+        const txt = await res.text();
           if(!res.ok) return { ok:false, message: txt || 'Falha ao excluir na planilha.' };
           return { ok:true, message: txt || 'Excluída' };
         }catch(e){
@@ -509,7 +509,9 @@
       }
     };
 
-    // ===== Calendário =====
+    /* ==============================
+       Calendário
+    ============================== */
     const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const dow = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
     const calTitle = $('#calTitle'), calDow = $('#calDow'), calGrid = $('#calGrid');
@@ -565,7 +567,9 @@
       }
     }
 
-    // ===== Resumo mensal =====
+    /* ==============================
+       Resumo mensal
+    ============================== */
     function sumExtrasFromRecord(r){
       const keys = Object.keys(r||{}).filter(k=>k.toLowerCase().startsWith('pagamentoextra'));
       return keys.reduce((acc,k)=> acc + parseBRL(r[k]), 0);
@@ -588,7 +592,9 @@
       $('#kpiTotalMes').textContent = formatBRL(adiantado + finalPago);
     }
 
-    // ===== Modal do dia =====
+    /* ==============================
+       Modal do dia
+    ============================== */
     const dayModal = $('#dayModal');
     function openDayModal(date, items){
       $('#modalTitle').textContent = `Reservas de ${date.toLocaleDateString('pt-BR')}`;
@@ -639,16 +645,152 @@
       </div>`;
     }
 
-    // ===== Ações: Editar / Concluir / Excluir =====
+    /* ==============================
+       Form & validações
+    ============================== */
+    const form = $('#reservaForm');
+    const spinner = $('#spinner');
+    const submitBtn = $('#submitBtn');
+    const cancelEditBtn = $('#cancelEdit');
+    const statusChip = $('#statusChip');
+
+    const inputTelefone = $('#telefone');
+    const inputValor = $('#valorEstimado');
+    const inputSinal = $('#pagamentoAntecipado');
+    const selectBanco = $('#banco');
+    const bancoReq = $('#bancoReq');
+    const inputArquivo = $('#arquivo');
+    const fileBox = $('#fileBox');
+    const fileName = $('#fileName');
+    const clearFile = $('#clearFile');
+    const inputData = $('#datahora');
+
+    inputData.min = nowLocalMin();
+    inputTelefone.addEventListener('input', e => e.target.value = maskPhone(e.target.value));
+    ;[inputValor, inputSinal].forEach(inp => inp.addEventListener('input', e => e.target.value = formatBRLInput(e.target.value)));
+
+    const toggleBancoRequired = () => {
+      const v = parseBRL(inputSinal.value);
+      const has = v > 0; selectBanco.required = has; bancoReq.style.display = has? '' : 'none';
+    };
+    inputSinal.addEventListener('input', toggleBancoRequired);
+
+    inputArquivo.addEventListener('change', () => {
+      const f = inputArquivo.files[0];
+      if(!f){ fileBox.style.display="none"; return; }
+      const okType = /pdf|jpg|jpeg|png/i.test(f.type) || /(pdf|jpg|jpeg|png)$/i.test(f.name);
+      if(!okType){ toast('Tipo de arquivo inválido.'); inputArquivo.value=''; return; }
+      if(f.size > 5*1024*1024){ toast('Arquivo maior que 5 MB.'); inputArquivo.value=''; return; }
+      fileName.textContent = f.name + " • " + (f.size/1024/1024).toFixed(2) + " MB";
+      fileBox.style.display = 'flex';
+    });
+    clearFile.addEventListener('click', ()=>{ inputArquivo.value=''; fileBox.style.display='none'; });
+
+    function validateExtra(){
+      if(new Date(inputData.value) < new Date()){ toast('Data/hora no passado.'); inputData.focus(); return false; }
+      const telDigits = inputTelefone.value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); inputTelefone.focus(); return false; }
+      if(parseBRL(inputSinal.value) > 0 && !selectBanco.value){ toast('Selecione o banco do adiantamento.'); selectBanco.focus(); return false; }
+      return true;
+    }
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      if(!form.checkValidity()){ toast('Confira os campos obrigatórios.'); return; }
+      if(!validateExtra()) return;
+      spinner.classList.add('show'); submitBtn.disabled = true;
+
+      const payload = collectPayload();
+      const file = inputArquivo.files[0];
+      if(file){
+        try{
+          const b64 = await toBase64(file);
+          payload.arquivo = String(b64).split(',')[1];
+          payload.nomeArquivo = file.name;
+        }catch(e){ console.error(e); toast('Falha ao ler o arquivo.'); }
+      }
+
+      let resp;
+      if(state.editingId){
+        resp = await api.atualizar(state.editingId, payload);
+      }else{
+        resp = await api.cadastrar(payload);
+      }
+
+      if(resp.ok){
+        toast('✅ ' + (resp.message||'OK'));
+        await loadMonth(state.ano, state.mes);
+        form.reset(); statusChip.textContent='PENDENTE'; inputData.min = nowLocalMin();
+        fileBox.style.display='none'; cancelEditBtn.style.display='none'; state.editingId=null; $('#reservaId').value='';
+      }else{
+        toast('⚠️ ' + resp.message);
+      }
+
+      spinner.classList.remove('show'); submitBtn.disabled = false;
+    });
+
+    function collectPayload(){
+      const fd = new FormData(form);
+      const obj = Object.fromEntries(fd.entries());
+      obj.valorEstimado = String(parseBRL(obj.valorEstimado||0));
+      obj.pagamentoAntecipado = String(parseBRL(obj.pagamentoAntecipado||0));
+      return obj;
+    }
+
+    /* ==============================
+       Ações: Editar / Concluir / Excluir
+    ============================== */
     function onClickEditar(e){
       const id = e.currentTarget.dataset.id;
       const r = state.reservas.find(x=>String(x.id)===String(id));
       if(!r) return;
+
       if (r._semIdReal){
-        toast('Não é possível editar: este registro veio sem ID da planilha. Atualize o GAS para o listar retornar ID.');
+        toast('Não é possível editar: este registro veio sem ID da planilha. Ajuste o GAS para listar retornar o ID.');
         return;
       }
-      openEditModal(r);
+
+      // Marca edição
+      state.editingId = r.id;
+      $('#reservaId').value = r.id;
+      $('#cancelEdit').style.display = ''; // mostra "Cancelar edição"
+
+      // Preenche formulário principal
+      $('#nome').value = r.nome || '';
+      $('#email').value = r.email || '';
+      $('#telefone').value = r.telefone || '';
+      $('#pessoas').value = r.pessoas || '';
+      $('#mesa').value = r.mesa || '';
+      $('#cardapio').value = r.cardapio || '';
+      $('#observacoes').value = r.observacoes || '';
+
+      // Data/hora no formato local
+      if (r.datahora){
+        const dt = new Date(r.datahora);
+        const off = new Date(dt);
+        off.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
+        $('#datahora').value = off.toISOString().slice(0,16);
+      } else {
+        $('#datahora').value = '';
+      }
+
+      // Valores R$
+      $('#valorEstimado').value = (Number(r.valorEstimado||0)).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
+      const adiant = Number(r.pagamentoAntecipado||0);
+      $('#pagamentoAntecipado').value = adiant.toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
+      $('#banco').value = r.banco || '';
+
+      // Status
+      $('#statusChip').textContent = (r.status || 'Pendente').toUpperCase();
+
+      // Regras de obrigatoriedade do banco
+      const v = parseBRL($('#pagamentoAntecipado').value);
+      const has = v > 0;
+      $('#banco').required = has;
+      $('#bancoReq').style.display = has ? '' : 'none';
+
+      toast('✏️ Editando reserva — altere no formulário e clique em "Salvar Reserva".');
+      // Fecha o modal do dia, se estiver aberto
+      $('#dayModal').classList.remove('show');
     }
 
     async function onClickExcluir(e){
@@ -695,152 +837,21 @@
       }
     });
 
-    // ===== Modal de Edição =====
-    const editModal = $('#editModal');
-    const extrasList = $('#extrasList');
-    const anexosList = $('#anexosList');
-    const sumPreview = $('#sumPreview');
-
-    function addExtraRow(value=0, bank=""){
-      const idx = extrasList.children.length + 1;
-      const row = document.createElement('div');
-      row.className = 'item-row-3';
-      row.innerHTML = `
-        <div>
-          <label>Pagamento extra ${idx} (R$)</label>
-          <input class="extra-valor" inputmode="decimal" placeholder="0,00" value="${value? formatBRL(value).replace('R$ ',''): ''}" />
-        </div>
-        <div>
-          <label>Banco</label>
-          <select class="extra-banco">
-            <option value="">Selecione</option>
-            <option ${bank==='SICREDI'?'selected':''}>SICREDI</option>
-            <option ${bank==='ITAÚ'?'selected':''}>ITAÚ</option>
-            <option ${bank==='CRÉDITO POS'?'selected':''}>CRÉDITO POS</option>
-            <option ${bank==='DÉBITO POS'?'selected':''}>DÉBITO POS</option>
-          </select>
-        </div>
-        <div class="item-actions">
-          <button type="button" class="btn btn-ghost btn-del-extra" style="width:auto">Remover</button>
-        </div>`;
-      const inp = $('.extra-valor', row); inp.addEventListener('input', ev=>{ ev.target.value = formatBRLInput(ev.target.value); updateSumPreview(); });
-      $('.btn-del-extra', row).addEventListener('click', ()=>{ row.remove(); renumberExtraLabels(); updateSumPreview(); });
-      extrasList.appendChild(row);
-      updateSumPreview();
-    }
-    function renumberExtraLabels(){
-      $$('.item-row-3', extrasList).forEach((row,i)=>{ $('label', row).textContent = `Pagamento extra ${i+1} (R$)`; });
-    }
-    function addAnexoRow(){
-      const i = anexosList.children.length + 1;
-      const row = document.createElement('div');
-      row.className = 'item-row';
-      row.innerHTML = `
-        <div>
-          <label>Arquivo ${i}</label>
-          <input class="anexo-file" type="file" accept=".pdf,.jpg,.jpeg,.png" />
-        </div>
-        <div class="item-actions">
-          <button type="button" class="btn btn-ghost btn-del-anexo" style="width:auto">Remover</button>
-        </div>`;
-      $('.btn-del-anexo', row).addEventListener('click', ()=> row.remove());
-      anexosList.appendChild(row);
-    }
-
-    function updateSumPreview(){
-      const base = parseBRL($('#e_pagamentoAntecipado').value);
-      const extras = $$('.extra-valor').reduce((acc,inp)=> acc + parseBRL(inp.value), 0);
-      sumPreview.innerHTML = `Total adiantado (base + extras): <b>${formatBRL(base + extras)}</b>`;
-    }
-
-    function fillEditForm(r){
-      $('#editId').value = r.id;
-      $('#e_nome').value = r.nome||'';
-      $('#e_email').value = r.email||'';
-      $('#e_telefone').value = r.telefone||'';
-      $('#e_pessoas').value = r.pessoas||'';
-      $('#e_mesa').value = r.mesa||'';
-      $('#e_cardapio').value = r.cardapio||'';
-      const dt = new Date(r.datahora); const off = new Date(dt); off.setMinutes(dt.getMinutes()-dt.getTimezoneOffset()); $('#e_datahora').value = off.toISOString().slice(0,16);
-      $('#e_valorEstimado').value = formatBRL(parseBRL(r.valorEstimado||0)).replace('R$ ','');
-      $('#e_pagamentoAntecipado').value = formatBRL(parseBRL(r.pagamentoAntecipado||0)).replace('R$ ','');
-      $('#e_banco').value = r.banco||'';
-      $('#e_observacoes').value = r.observacoes||'';
-
-      extrasList.innerHTML = '';
-      const keys = Object.keys(r).filter(k=>k.toLowerCase().startsWith('pagamentoextra'));
-      keys.sort();
-      keys.forEach(k=> addExtraRow(parseBRL(r[k]), r['banco' + k.replace('pagamento','')] || ''));
-      updateSumPreview();
-
-      anexosList.innerHTML = '';
-    }
-
-    function openEditModal(r){
-      fillEditForm(r);
-      editModal.classList.add('show');
-    }
-    $('#cancelEditModal').addEventListener('click', ()=> editModal.classList.remove('show'));
-    editModal.addEventListener('click', (e)=>{ if(e.target===editModal) editModal.classList.remove('show'); });
-
-    $('#addExtraBtn').addEventListener('click', ()=> addExtraRow());
-    $('#addAnexoBtn').addEventListener('click', ()=> addAnexoRow());
-    $('#e_pagamentoAntecipado').addEventListener('input', e=>{ e.target.value = formatBRLInput(e.target.value); updateSumPreview(); });
-    $('#e_valorEstimado').addEventListener('input', e=>{ e.target.value = formatBRLInput(e.target.value); });
-    $('#e_telefone').addEventListener('input', e=> e.target.value = maskPhone(e.target.value));
-
-    $('#saveEditBtn').addEventListener('click', async ()=>{
-      const id = $('#editId').value;
-      if(!id) return;
-
-      if(!$('#e_nome').value){ toast('Informe o nome.'); return; }
-      if($('#e_datahora').value && new Date($('#e_datahora').value) < new Date()){ toast('Data/hora no passado.'); return; }
-      const telDigits = $('#e_telefone').value.replace(/\D/g,''); if(telDigits.length<10){ toast('Telefone incompleto.'); return; }
-
-      const payload = {
-        nome: $('#e_nome').value,
-        email: $('#e_email').value,
-        telefone: $('#e_telefone').value,
-        pessoas: $('#e_pessoas').value,
-        mesa: $('#e_mesa').value,
-        cardapio: $('#e_cardapio').value,
-        datahora: $('#e_datahora').value,
-        valorEstimado: String(parseBRL($('#e_valorEstimado').value||0)),
-        banco: $('#e_banco').value,
-        observacoes: $('#e_observacoes').value
-      };
-
-      const base = parseBRL($('#e_pagamentoAntecipado').value||0);
-      let totalExtras = 0; let i=0; const extras = $$('.item-row-3', extrasList);
-      for(const row of extras){
-        const v = parseBRL($('.extra-valor', row).value||0);
-        const b = $('.extra-banco', row).value||'';
-        if(v>0){ i++; payload[`pagamentoExtra${i}`] = String(v); if(b) payload[`bancoExtra${i}`]=b; totalExtras += v; }
-      }
-      payload.pagamentoAntecipado = String(base + totalExtras);
-
-      let ai = 0; const rows = $$('.anexo-file');
-      for(const fInput of rows){
-        const f = fInput.files && fInput.files[0];
-        if(!f) continue;
-        const okType = /pdf|jpg|jpeg|png/i.test(f.type) || /(pdf|jpg|jpeg|png)$/i.test(f.name);
-        if(!okType){ toast('Tipo de arquivo inválido em anexos.'); return; }
-        if(f.size>5*1024*1024){ toast('Um anexo excede 5 MB.'); return; }
-        const b64 = await toBase64(f);
-        ai++; payload[`anexo${ai}`] = String(b64).split(',')[1]; payload[`anexoNome${ai}`] = f.name;
-      }
-
-      const resp = await api.atualizar(id, payload);
-      if(resp.ok){
-        toast('✅ Alterações salvas');
-        editModal.classList.remove('show');
-        await loadMonth(state.ano, state.mes);
-      }else{
-        toast('⚠️ ' + resp.message);
-      }
+    // Cancelar edição
+    cancelEditBtn.addEventListener('click', ()=>{
+      state.editingId = null;
+      $('#reservaId').value = '';
+      $('#cancelEdit').style.display = 'none';
+      form.reset();
+      $('#statusChip').textContent = 'PENDENTE';
+      $('#fileBox').style.display='none';
+      $('#datahora').min = nowLocalMin();
+      toast('Edição cancelada.');
     });
 
-    // ===== Navegação e Carregamento =====
+    /* ==============================
+       Navegação e Carregamento
+    ============================== */
     $('#prevMonth').addEventListener('click', ()=>{ const m = new Date(state.ano,state.mes,1); m.setMonth(m.getMonth()-1); state.mes=m.getMonth(); state.ano=m.getFullYear(); refreshAll(); });
     $('#nextMonth').addEventListener('click', ()=>{ const m = new Date(state.ano,state.mes,1); m.setMonth(m.getMonth()+1); state.mes=m.getMonth(); state.ano=m.getFullYear(); refreshAll(); });
     $('#todayBtn').addEventListener('click', ()=>{ const t=new Date(); state.mes=t.getMonth(); state.ano=t.getFullYear(); refreshAll(); });
@@ -854,13 +865,19 @@
           return {
             id: idReal || `ROW-${i+1}`,
             _semIdReal: !idReal,
-            nome: r.nome||r.Nome||'', email:r.email||r.Email||'', telefone:r.telefone||r.Fone||'', pessoas:r.pessoas||r.Pessoas||'',
-            mesa:r.mesa||r.Mesa||r.Local||'', cardapio:r.cardapio||r.Cardapio||'', observacoes:r.observacoes||r.Obs||'',
+            nome: r.nome||r.Nome||'',
+            email:r.email||r.Email||'',
+            telefone:r.telefone||r.Fone||'',
+            pessoas:r.pessoas||r.Pessoas||'',
+            mesa:r.mesa||r.Mesa||r.Local||'',
+            cardapio:r.cardapio||r.Cardapio||'',
+            observacoes:r.observacoes||r.Obs||'',
             datahora: r.datahora || r.DataHora || r.data || r.Data || '',
             valorEstimado: String(r.valorEstimado ?? r.ValorEstimado ?? '0'),
             pagamentoAntecipado: String(r.pagamentoAntecipado ?? r.Adiantamento ?? '0'),
             valorFinalPago: String(r.valorFinalPago ?? r.FinalPago ?? '0'),
-            banco: r.banco || r.Banco || '', status: r.status || r.Status || 'Pendente',
+            banco: r.banco || r.Banco || '',
+            status: r.status || r.Status || 'Pendente',
             ...r
           };
         });
@@ -873,7 +890,7 @@
 
     function refreshAll(){ buildCalendar(); updateSummary(); loadMonth(state.ano, state.mes); }
 
-    // ===== Inicialização =====
+    // Inicialização
     window.addEventListener('DOMContentLoaded', ()=>{
       $('#datahora').min = nowLocalMin();
       refreshAll();
