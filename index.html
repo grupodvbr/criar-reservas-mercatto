@@ -871,7 +871,7 @@ state.reservas = data.map((r,i)=> {
     pessoas:r.pessoas||r.Pessoas||'',
     mesa:r.mesa||r.Mesa||r.Local||'',
     cardapio:r.cardapio||r.Cardapio||'',
-    observacoes:r.observacoes||r.Obs||'',
+    observacoes: r.observacoes || r.Observacoes || r.Obs || '',
     datahora: r.datahora || r.DataHora || r.data || r.Data || '',
     valorEstimado: String(r.valorEstimado ?? r.ValorEstimado ?? '0'),
     pagamentoAntecipado: String(r.pagamentoAntecipado ?? r.Adiantamento ?? '0'),
@@ -881,6 +881,7 @@ state.reservas = data.map((r,i)=> {
     ...r
   };
 });
+
       }catch(e){
         state.reservas = [];
         toast('⚠️ Erro ao carregar dados da planilha: ' + e.message);
