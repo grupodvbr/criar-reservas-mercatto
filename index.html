@@ -446,7 +446,22 @@
     const maskPhone = v => { const d = v.replace(/\D/g,'').slice(0,11); return d.length<=10? d.replace(/^(\d{2})(\d{4})(\d{0,4}).*/,"($1) $2-$3") : d.replace(/^(\d{2})(\d{5})(\d{0,4}).*/,"($1) $2-$3"); };
     const formatBRL = (num) => Number(num||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
     const formatBRLInput = v => { const only=v.replace(/[^\d]/g,''); const n=Number(only)/100; return isNaN(n)?"": n.toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2}); };
-    const parseBRL = v => { if(!v) return 0; const s=v.toString().replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',', '.'); const n=Number(s); return isNaN(n)?0:n; };
+   const parseBRL = v => {
+  if (!v) return 0;
+
+  // remove tudo menos dígitos e vírgula/ponto
+  let s = v.toString().replace(/[^\d,]/g, '');
+
+  // se NÃO tem vírgula → interpretar como CENTAVOS
+  if (!s.includes(',')) {
+    return Number(s) / 100;
+  }
+
+  // se tem vírgula → formato BR
+  s = s.replace(/\./g, '').replace(',', '.');
+  return Number(s) || 0;
+};
+
     const nowLocalMin = ()=>{ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
     const ymd = d=>{ const z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`; };
     const toBase64 = (file) => new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(file); });
