@@ -87,7 +87,13 @@
     }
     .cal-day:hover{transform:translateY(-1px); box-shadow:0 8px 20px rgba(2,6,23,.06)}
     .cal-day.out{opacity:.45}
-    .cal-day .num{font-weight:900; font-size:1.05rem}
+    .cal-day .num{
+  position:absolute;
+  top:8px;
+  right:10px;
+  font-weight:900;
+  font-size:1.05rem;
+}
     .cal-day .tags{position:absolute; bottom:10px; left:10px; right:10px; display:flex; gap:6px; flex-wrap:wrap}
     .tag{font-size:.78rem; padding:4px 8px; border-radius:999px; border:1px solid var(--line)}
     .t-pend{background:#fef3c7; border-color:#fde68a}
