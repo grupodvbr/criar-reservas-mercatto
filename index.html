@@ -445,7 +445,15 @@
     const toast = (msg, ms=3500) => { const el = $("#toast"); el.textContent = msg; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"), ms); };
     const maskPhone = v => { const d = v.replace(/\D/g,'').slice(0,11); return d.length<=10? d.replace(/^(\d{2})(\d{4})(\d{0,4}).*/,"($1) $2-$3") : d.replace(/^(\d{2})(\d{5})(\d{0,4}).*/,"($1) $2-$3"); };
     const formatBRL = (num) => Number(num||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-    const formatBRLInput = v => { const only=v.replace(/[^\d]/g,''); const n=Number(only)/100; return isNaN(n)?"": n.toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2}); };
+    const formatBRLInput = v => {
+  const only = v.replace(/[^\d]/g, "");
+  const n = Number(only) / 100;
+  if (isNaN(n)) return "";
+
+  // Mantém apenas vírgula decimal, sem ponto de milhar
+  return n.toFixed(2).replace(".", ",");
+};
+
    const parseBRL = v => {
   if (!v) return 0;
 
