@@ -681,7 +681,7 @@
 
     inputData.min = nowLocalMin();
     inputTelefone.addEventListener('input', e => e.target.value = maskPhone(e.target.value));
-    ;[inputValor, inputSinal].forEach(inp => inp.addEventListener('input', e => e.target.value = formatBRLInput(e.target.value)));
+    ;inputValor.addEventListener('input', e => e.target.value = formatBRLInput(e.target.value));
 
     const toggleBancoRequired = () => {
       const v = parseBRL(inputSinal.value);
