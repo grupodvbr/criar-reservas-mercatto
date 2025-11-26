@@ -789,8 +789,7 @@
 
       // Valores R$
       $('#valorEstimado').value = (Number(r.valorEstimado||0)).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
-      const adiant = Number(r.pagamentoAntecipado||0);
-      $('#pagamentoAntecipado').value = adiant.toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2});
+$('#pagamentoAntecipado').value = r.pagamentoAntecipado ?? '';
       $('#banco').value = r.banco || '';
 
       // Status
